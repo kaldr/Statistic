@@ -4,6 +4,10 @@ tasks:[
       description:"呼入电话统计"
       sourceCollection:"Customer_Record"
       targetCollection:"StatisticCallingIn"
+      defaultQuery:
+        DelStatus:0#未删除
+        RecordType_ID:1#业务类型
+        AddType:1#400客服电话
     }
     {
       name:"OrderSimpleStatistic"

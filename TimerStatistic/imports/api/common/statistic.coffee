@@ -4,6 +4,20 @@ import CSON from 'cson'
 import path from 'path'
 import _ from 'lodash'
 
+class StatisticCollection extends Mongo.Collection
+  constructor: (@collection, @taskObj = {} ) ->
+    super @collection
+
+  appendDefaultValue : (query) =>
+    keys = _.keys @taskObj.defaultQuery
+    _.map keys, (key) =>
+      query[key] = @taskObj.defaultQuery[key]
+    query
+
+  find : (query, options) =>
+    @appendDefaultValue query
+    super.find(query, options)
+
 StatisticTasks = new Mongo.Collection 'StatisticTasks'
 StatisticTaskLog = new Mongo.Collection 'StatisticTaskLog'
 
@@ -38,7 +52,9 @@ setDefaultTasks = () =>
 initiation = () =>
   setDefaultTasks()
 
+
 initiation()
 
+exports.StatisticCollection = StatisticCollection
 exports.StatisticTasks = StatisticTasks
 exports.StatisticTaskLog = StatisticTaskLog
