@@ -1,0 +1,26 @@
+tasks:[
+    {
+      name:"CallingInStatistic"
+      description:"呼入电话统计"
+      sourceCollection:"Customer_Record"
+      targetCollection:"StatisticCallingIn"
+    }
+    {
+      name:"OrderSimpleStatistic"
+      description:"订单简单统计"
+      sourceCollection:"Orders"
+      targetCollection:"StatisticOrder_simple"
+    }
+    {
+      name:"CustomerStatistic"
+      description:"客户统计"
+      sourceCollection:"Orders"
+      targetCollection:"StatisticCustomer"
+    }
+    {
+      name:"ProductStatistic"
+      description:"产品统计"
+      sourceCollection:"ProductList"
+      targetCollection:"StatisticProduct"
+    }
+]
