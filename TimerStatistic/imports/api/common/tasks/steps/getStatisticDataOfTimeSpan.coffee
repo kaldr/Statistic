@@ -1,0 +1,3 @@
+class GetStatisticDataOfTimeSpan
+
+exports.GetStatisticDataOfTimeSpan = GetStatisticDataOfTimeSpan

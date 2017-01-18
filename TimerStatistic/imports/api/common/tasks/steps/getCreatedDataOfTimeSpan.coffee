@@ -1,0 +1,3 @@
+class GetCreatedDataOfTimespan
+
+exports.GetCreatedDataOfTimespan = GetCreatedDataOfTimespan

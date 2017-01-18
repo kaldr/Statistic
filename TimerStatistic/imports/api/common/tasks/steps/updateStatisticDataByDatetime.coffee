@@ -1,0 +1,3 @@
+class UpdateStatisticDataByDatetime
+
+exports.UpdateStatisticDataByDatetime = UpdateStatisticDataByDatetime
