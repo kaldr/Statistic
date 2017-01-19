@@ -1,4 +1,4 @@
 import { Meteor } from 'meteor/meteor'
-import {Statistic} from '/imports/api/common/Statistic.coffee'
+import {Statistic} from './statistic//Statistic.coffee'
 Meteor.startup ->
   S = new Statistic()

@@ -43,10 +43,12 @@ class StatisticTaskLog
     @content.text = '开始任务工作'
     @content.type = 5
     @log @content
+
   endTask: () =>
     @content.text = '结束任务工作'
     @content.type = 6
     @log @content
+
   setStep: (step) =>
     @content.text = '开始工作步骤'
     @content.description = step.description

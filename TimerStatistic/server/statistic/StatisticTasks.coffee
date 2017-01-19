@@ -18,7 +18,7 @@ class StatisticTasks
     taskOb.id = new Mongo.ObjectID()
     @logger.setTask taskOb
     taskClass = Tasks[taskOb.name]
-    task = new taskClass(taskOb, @logger)
+    task = new taskClass(taskOb, @logger, @task)
     @logger.endTask
 
 exports.StatisticTasks = StatisticTasks
