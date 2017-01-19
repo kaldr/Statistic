@@ -1,5 +1,4 @@
 import * as Steps from './steps/index.coffee'
-import Q from 'q'
 import {Mongo} from 'meteor/mongo'
 import {Meteor} from 'meteor/meteor'
 
@@ -8,17 +7,18 @@ class Task
     @configuration()
 
   configuration: () =>
+  stepOnReject: () =>
 
-  runStep: (stepOb) =>
+  runStep: (result, stepOb) =>
     stepOb.id = new Mongo.ObjectID()
     @logger.setStep stepOb
-    Step = new Steps[stepOb.name](stepOb, @logger, @taskob, @statisticTask)
+    Step = new Steps[stepOb.name](stepOb, @logger, @taskOb, @statisticTask)
+    output = Step.run result
     @logger.endStep()
-
-  constructSequence: () =>
+    output
 
   runSteps: () =>
-    _.map @taskOb.steps, @runStep
+    result = []
+    _.reduce @taskOb.steps, @runStep, @taskOb
 
-console.log 'ok'
 exports.Task = Task

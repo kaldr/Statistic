@@ -18,7 +18,7 @@ getTasksFromCSONConfig = () =>
   basePath = path.resolve('.').split('.meteor')[0]
   csonFile = basePath + __dirname + '/defaultTasks.cson'
   tasks = CSON.load csonFile
-  tasks.tasks
+  tasks.statistics
 
 ###
 Statistic
@@ -57,6 +57,7 @@ class Statistic
     currentTask = new StatisticTasks task, @logger
     currentTask.run()
     @logger.endStatisticTask()
+
   ###
     运行所有任务
     @method runTasks
@@ -67,6 +68,7 @@ class Statistic
     #_.map @tasks, @runTask
     @runTask @tasks[0]
     @logger.endStatistic()
+
   ###
     获取任务
     @method getTasks
@@ -109,7 +111,6 @@ setDefaultTasks = () =>
 ###
 initiation = () =>
   setDefaultTasks()
-  #getSomeData()
 
 initiation()
 

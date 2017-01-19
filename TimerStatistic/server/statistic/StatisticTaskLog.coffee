@@ -15,11 +15,13 @@ class StatisticTaskLog
 
   startStatistic: () =>
     @content.text = '开始统计项目'
+    @content.description = ""
     @content.type = 1
     @log @content
 
   endStatistic: () =>
     @content.text = '结束统计项目'
+    @content.description = ""
     @content.type = 2
     @log @content
 
@@ -33,6 +35,7 @@ class StatisticTaskLog
 
   endStatisticTask: () =>
     @content.text = '结束统计任务'
+    @content.description = ""
     @content.type = 4
     @log @content
 
@@ -46,6 +49,7 @@ class StatisticTaskLog
 
   endTask: () =>
     @content.text = '结束任务工作'
+    @content.description = ""
     @content.type = 6
     @log @content
 
@@ -59,12 +63,38 @@ class StatisticTaskLog
 
   endStep: () =>
     @content.text = '结束工作步骤'
+    @content.description = ""
     @content.type = 8
     @log @content
 
+  startRunning: (content) =>
+    @content.text = '开始执行程序'
+    @content.description = content
+    @content.type = 9
+    @log @content
+
+  endRunning: (content) =>
+    @content.text = '结束执行程序'
+    @content.description = content
+    @content.type = 10
+    @log @content
+
+  errorRunningInput: (content) =>
+    @content.text = '程序输入错误'
+    @content.description = content
+    @content.type = 11
+    @log @content
+
+  errorRunning: (content) =>
+    @content.text = '程序运行错误'
+    @content.description = content
+    @content.type = 12
+    @log @content
+
+
   log: (content) =>
     content.datetime = new Date()
+    console.log content.text + "|" + content.description
     StatisticTaskLogCollection.insert content
-
 
 exports.StatisticTaskLog = StatisticTaskLog

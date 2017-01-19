@@ -1,21 +1,29 @@
-tasks:[
+statistics:[
     {
       name:"CallingInStatisticByProductTypeOfNingBo"
       description:"呼入电话统计"
       sourceCollection:"Customer_Record"
       targetCollection:"Statistic_CallingInByProduct_NingBo"
+      aggregateOutCollection:"Aggregate_Statistic_CallingInByProduct_NingBo"
+      groupSum:1
       defaultQuery:
         DelStatus:0#未删除
         RecordType_ID:1#业务类型
         AddType:1#400客服电话
-        SDID:"000000000000000000000001"#宁波站
       objectIDParameters:["SDID",'DestinationInfo.MainID']
       timeParameter:
         createTime:'Record_Time'
         updateTime:'UpdateTime'
-      parameters:[
-        'Record_Type','ProductAreaType','LineType_ID','DestinationInfo.MainID'
-      ]
+        format:'Date'
+      parameters:{
+        "SDID":1,
+        'Record_Type':1
+        'ProductAreaType_ID':1,
+        'LineType_ID':1,
+        'destiniation':"$DestinationInfo.MainID"
+      }
+
+
       tasks:[
         {
           name:'InitializationTask'
