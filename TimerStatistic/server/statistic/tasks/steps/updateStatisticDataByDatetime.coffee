@@ -4,5 +4,9 @@ class UpdateStatisticDataByDatetime extends Step
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
     super @stepOb, @logger, @taskOb, @statisticTask
 
+  process: (result) =>
+
+  updateCurrentSpan: () =>
+  updateParentSpan: () =>
 
 exports.UpdateStatisticDataByDatetime = UpdateStatisticDataByDatetime

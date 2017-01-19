@@ -23,6 +23,13 @@ getTasksFromCSONConfig = () =>
 ###
 Statistic
 任务调度类
+
+|__Project_____________________________________________________________________
+  |__Statistic__(用于运行和调度项目，是最顶级的程序，下属为StastisticTasks) ___________
+    |__Task__(通过StastisticTasks调度，在task文件夹中，所有task都继承Task类) _________
+      |__Step__(通过各种Task来调度，所有step都继承Step类) ___________________________
+        |__Process__(具体执行的方法，写在Step文件夹的每个step文件中) __________________
+          |_____________________________________________________________________
 ###
 class Statistic
   constructor: (@config) ->

@@ -23,12 +23,12 @@ statistics:[
         'destiniation':"$DestinationInfo.MainID"
       }
 
-
       tasks:[
         {
           name:'InitializationTask'
           description:"初始化原始数据的统计"
           parameters:
+            start:2013
             timespan:600
           steps:[
             {

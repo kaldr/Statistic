@@ -19,4 +19,5 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     result = resultCollection.find({} ).fetch()
     @logger.endRunning '完成'
     result
+
 exports.GetUpdatedDataOfTimespan = GetUpdatedDataOfTimespan
