@@ -15,6 +15,7 @@ statistics:[
         createTime:'Record_Time'
         updateTime:'UpdateTime'
         format:'Date'
+        timestructure:['basic']
       parameters:{
         "SDID":1,
         'Record_Type':1
@@ -28,8 +29,8 @@ statistics:[
           name:'InitializationTask'
           description:"初始化原始数据的统计"
           parameters:
-            start:2013
-            timespan:600
+            start:"2017/1/19"
+            timespan:300
           steps:[
             {
               name:"GetCreatedDataOfTimespan"

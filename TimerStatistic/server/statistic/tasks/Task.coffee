@@ -11,10 +11,10 @@ class Task
 
   runStep: (result, stepOb) =>
     stepOb.id = new Mongo.ObjectID()
-    @logger.setStep stepOb
+    #@logger.setStep stepOb
     Step = new Steps[stepOb.name](stepOb, @logger, @taskOb, @statisticTask)
     output = Step.run result
-    @logger.endStep()
+    #@logger.endStep()
     output
 
   runSteps: () =>

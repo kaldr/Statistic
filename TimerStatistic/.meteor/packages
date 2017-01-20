@@ -29,3 +29,6 @@ jalik:ufs-gridfs
 matb33:collection-hooks
 stylus
 monbro:mongodb-mapreduce-aggregation
+http
+npm-bcrypt
+nimble:restivus

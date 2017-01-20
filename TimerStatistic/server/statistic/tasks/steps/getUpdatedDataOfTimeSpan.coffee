@@ -12,12 +12,12 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
       $lt: input.endTime
 
   process: (input) =>
-    @logger.startRunning '统计时间段内的更新的信息'
+    #@logger.startRunning '统计时间段内的更新的信息'
     @buildInput(input)
     @collection.aggregate @pipeline
     resultCollection = Collections[@statisticTask.aggregateOutCollection]
     result = resultCollection.find({} ).fetch()
-    @logger.endRunning '完成'
+    #@logger.endRunning '完成'
     result
 
 exports.GetUpdatedDataOfTimespan = GetUpdatedDataOfTimespan
