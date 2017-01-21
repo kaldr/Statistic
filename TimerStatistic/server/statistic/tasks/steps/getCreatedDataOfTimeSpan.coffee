@@ -2,6 +2,7 @@ import {Mongo} from 'meteor/mongo'
 import {Step} from './Step.coffee'
 import _ from 'lodash'
 import * as Collections from '/imports/api/Collection/index.coffee'
+import {DateTime} from '/imports/util/datetime/datetime.coffee'
 
 class GetCreatedDataOfTimespan extends Step
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
@@ -9,7 +10,6 @@ class GetCreatedDataOfTimespan extends Step
 
   buildInput: (input) =>
     @collection = Collections[@statisticTask.sourceCollection]
-    @collection._ensureIndex @getIndex()
     @selector = @getDefaultQuery()
     @fields = @getFields()
     @group =
@@ -20,8 +20,8 @@ class GetCreatedDataOfTimespan extends Step
         $sum: @statisticTask.groupSum
 
     @selector[@statisticTask.timeParameter.createTime] =
-      $gte: input.startTime
-      $lt: input.endTime
+      $gte: input.startTime.toDate()
+      $lte: input.endTime.toDate()
 
     @pipeline = [
       {$match: @selector}
@@ -31,14 +31,29 @@ class GetCreatedDataOfTimespan extends Step
       {$out: @statisticTask.aggregateOutCollection}
     ]
 
-  process: (input) =>
-    #@logger.startRunning '统计时间段内的新增信息'
+
+
+  getAggregatedData: (input) =>
     @buildInput(input)
     @collection.aggregate @pipeline
     resultCollection = Collections[@statisticTask.aggregateOutCollection]
     result = resultCollection.find({} ).fetch()
+
+  getSpansNeedToUpdate: (input) =>
+    dt = new DateTime input.parameters.timespan
+    spans = dt.getTimeSpans input.startTime
+
+  process: (input) =>
+    #@logger.startRunning '统计时间段内的新增信息'
+    getAggregatedData = @getAggregatedData input
+    getSpansNeedToUpdate = @getSpansNeedToUpdate input
+
+    result =
+      data: getAggregatedData
+      spans: getSpansNeedToUpdate
+      type: 'insert'
     #@logger.endRunning '完成'
-    result
+    [result]
 
 
 exports.GetCreatedDataOfTimespan = GetCreatedDataOfTimespan

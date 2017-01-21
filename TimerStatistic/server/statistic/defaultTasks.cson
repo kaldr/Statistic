@@ -1,10 +1,11 @@
 statistics:[
     {
+      taskID:'InitializationTask0919'
       name:"CallingInStatisticByProductTypeOfNingBo"
       description:"呼入电话统计"
       sourceCollection:"Customer_Record"
-      targetCollection:"Statistic_CallingInByProduct_NingBo"
-      aggregateOutCollection:"Aggregate_Statistic_CallingInByProduct_NingBo"
+      targetCollection:"Statistic_CallingInByProduct"
+      aggregateOutCollection:"Aggregate_Statistic_CallingInByProduct"
       groupSum:1
       defaultQuery:
         DelStatus:0#未删除
@@ -29,7 +30,8 @@ statistics:[
           name:'InitializationTask'
           description:"初始化原始数据的统计"
           parameters:
-            start:"2017/1/19"
+            start:"2016/10/1 9:30"
+            end:"2016/10/1 10:00"
             timespan:300
           steps:[
             {
@@ -47,10 +49,12 @@ statistics:[
           description:"定时轮询新数据，更新新增数据的统计"
           parameters:
             timespan:600
+            start:"2016/10/1 9:30"
+            end:"2016/10/1 10:30"
           steps:[
             {
-              name:"GetCreatedDataOfTimespan"
-              description:"获取时间间隔的新增数据"
+              name:"GetUpdatedDataOfTimespan"
+              description:"获取时间间隔的新增和更新的数据"
             }
             {
               name:"GetStatisticDataOfTimeSpan"

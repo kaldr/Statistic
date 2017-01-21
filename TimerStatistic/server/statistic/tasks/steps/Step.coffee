@@ -5,6 +5,10 @@ class Step
     constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
       @configuration()
 
+    setStep: (stepOb) =>
+      @stepOb = stepOb
+      @configuration()
+
     run: (result) =>
       if @runCheck() then @process?(result)
 

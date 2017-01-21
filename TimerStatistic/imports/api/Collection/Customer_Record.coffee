@@ -8,8 +8,9 @@ Customer_Record_GetOne = (delstatus) ->
     delstatus: delstatus?0
   }
 
-Aggregate_Statistic_CallingInByProduct_NingBo = new Mongo.Collection 'Aggregate_Statistic_CallingInByProduct_NingBo',{idGeneration:'MONGO'}
-
+Aggregate_Statistic_CallingInByProduct = new Mongo.Collection 'Aggregate_Statistic_CallingInByProduct',{idGeneration:'MONGO'}
+Statistic_CallingInByProduct = new Mongo.Collection 'Statistic_CallingInByProduct',{idGeneration:'MONGO'}
 exports.Customer_Record = Customer_Record
-exports.Aggregate_Statistic_CallingInByProduct_NingBo = Aggregate_Statistic_CallingInByProduct_NingBo
+exports.Aggregate_Statistic_CallingInByProduct = Aggregate_Statistic_CallingInByProduct
 exports.Customer_Record_GetOne = Customer_Record_GetOne
+exports.Statistic_CallingInByProduct = Statistic_CallingInByProduct

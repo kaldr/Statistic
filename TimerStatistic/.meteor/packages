@@ -32,3 +32,4 @@ monbro:mongodb-mapreduce-aggregation
 http
 npm-bcrypt
 nimble:restivus
+udondan:bulk-collection-update

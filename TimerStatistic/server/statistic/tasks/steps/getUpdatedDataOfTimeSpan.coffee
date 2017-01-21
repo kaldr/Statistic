@@ -4,20 +4,102 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
     super @stepOb, @logger, @taskOb, @statisticTask
 
-  buildInput: (input) =>
-    super.buildInput(input)
-    delete @selector[@statisticTask.timeParameter.createTime]
+  buildUpdateTimeInput: (input) =>
+    @selector = @getDefaultQuery()
     @selector[@statisticTask.timeParameter.updateTime] =
       $gte: input.startTime
       $lt: input.endTime
+    @selector[@statisticTask.timeParameter.createTime] =
+      $lt: input.startTime
 
+  aggregateDataOfNewCreated: (input) =>
+    super.process input
+
+  getUpdatedData: (input) =>
+    @buildUpdateTimeInput input
+    fields = {_id: 1}
+    fields[@statisticTask.timeParameter.createTime] = 1
+    @collection.find @selector, {fields: fields}
+      .fetch()
+
+  getStatisticSelector: (data) =>
+    spans
+
+  getTimeSpans: (data) =>
+
+  getTimeSpanForACreateTime: (time) =>
+
+
+  ###
+    从原始数据表通过aggregate获取新增数据的最小时间段的统计
+    @method getAggregatedData
+    @param {object} input 任务对象
+    @return {array} aggregate数据结果
+  ###
+  getAggregatedData: (input) =>
+    super.getAggregatedData input
+
+  buildMinSpanStatistic: (input, newlyAddedStatisticData) =>
+  buildParentSpanStatistic: (input, minSpanStatistic) =>
+  getUpdatedData: (input) =>
+  getStatisticDataOfTimeSpans: ( input, newlyUpdatedAggregateData) =>
+  getCurrentStatisticDataOfTimeSpans : (input, newlyUpdatedAggregateData) =>
+  getDifferenceOfData: (input, newlyUpdatedDataStatistic, currentUpdatedDataStatistic) =>
+  constructResult: (input, differenceOfData) =>
+  ###
+    运行
+    @method process
+    @param {object} input 任务对象
+    @return {object} 结果对象
+  ###
   process: (input) =>
-    #@logger.startRunning '统计时间段内的更新的信息'
-    @buildInput(input)
-    @collection.aggregate @pipeline
-    resultCollection = Collections[@statisticTask.aggregateOutCollection]
-    result = resultCollection.find({} ).fetch()
-    #@logger.endRunning '完成'
-    result
+    #========================================================
+    # 1.处理新增的数据
+    #========================================================
+    # 1.1 获取新增的数据
+    # DONE
+    # 通过aggregate，获取这个时间间隔下的数据增量
+    newlyAddedStatisticData = @getAggregatedData input
+
+    #--------------------------------------------------------
+    # 1.2 向statistic表插入当前时间间隔下的统计数据
+    # TODO
+    # 当前时间片，数据库中还不存在，因此，可以直接插入，数据结构是{data:[],spans:{Basic:[{Minute:{...}}],...},type:'insert'}，可以被下一步直接识别
+    minSpanStatistic = @buildMinSpanStatistic input, newlyAddedStatisticData
+
+    #--------------------------------------------------------
+    # 1.3 更新更高维度的数据，所有的都增加相关的数量
+    # TODO
+    # 但是比当前维度更高的时间片的统计，数据库中已经存在了，要对这些数据进行更新。
+    # 由于是增量数据，每个要更改的时间片统计，只需要增加增量计数值即可。
+    # 数据结构{data:[{selector:{},data:{}},...],type:'update'},其中selector是每条数据的查询条件，data是新数据结构
+    parentSpanStatistic = @buildParentSpanStatistic input, minSpanStatistic
+
+    #========================================================
+    # 2.处理更新的数据
+    #========================================================
+    # 2.1 获取时间片之内更新的数据
+    # 通过aggregate，获取到当前时间间隔下更新的数据的添加时间
+    newlyUpdatedAggregateData = @getUpdatedData input
+
+    #--------------------------------------------------------
+    # 2.2 从原始数据表中，获取最新的每个添加时间aggregate统计
+    # 这是最新的统计，将会把这个时间段的统计，都变成这个模样
+    newlyUpdatedDataStatistic = @getStatisticDataOfTimeSpans input, newlyUpdatedAggregateData
+
+    #--------------------------------------------------------
+    # 2.3 从统计表中，获取每个添加时间的统计信息
+    # 获取新的统计信息的目的，是为了计算这个时间维度内的数量的变化，比如获取了所有5分钟统计的数量之后，可以获取每个数据统计维度的数据变化
+    currentUpdatedDataStatistic = @getCurrentStatisticDataOfTimeSpans input, newlyUpdatedAggregateData
+
+    #--------------------------------------------------------
+    # 2.4 新老统计数据进行对比，获取每个数据统计维度的数据变化
+    # 获得了各个统计维度的变化之后，才可以对更高维度的数据进行更新
+    differenceOfData = @getDifferenceOfData input, newlyUpdatedDataStatistic, currentUpdatedDataStatistic
+
+    #--------------------------------------------------------
+    # 2.5 根据变化，获得最后的结果，并且输出到下一步中
+    result = @constructResult input, differenceOfData
+
 
 exports.GetUpdatedDataOfTimespan = GetUpdatedDataOfTimespan

@@ -5,17 +5,19 @@ import {Meteor} from 'meteor/meteor'
 class Task
   constructor: (@taskOb, @logger, @statisticTask) ->
     @configuration()
-
+    @taskSteps = {}
   configuration: () =>
   stepOnReject: () =>
-
   runStep: (result, stepOb) =>
     stepOb.id = new Mongo.ObjectID()
     #@logger.setStep stepOb
-    Step = new Steps[stepOb.name](stepOb, @logger, @taskOb, @statisticTask)
-    output = Step.run result
+    if not @taskSteps[stepOb.name]
+      @taskSteps[stepOb.name] = new Steps[stepOb.name](stepOb, @logger, @taskOb, @statisticTask)
+    else
+      @taskSteps[stepOb.name].setStep stepOb
+    output = @taskSteps[stepOb.name].run result
     #@logger.endStep()
-    output
+
 
   runSteps: () =>
     result = []
