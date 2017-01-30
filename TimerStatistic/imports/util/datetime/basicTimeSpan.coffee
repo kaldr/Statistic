@@ -7,12 +7,21 @@ import { Random } from 'meteor/random'
 import {Mongo} from 'meteor/mongo'
 
 class BasicTimeSpan
-  constructor: (t = 0, span = '十秒', spanlist = ['年','月','日','时','分']) ->
+  constructor: (t = 0, span = '十秒', @spanlist = ['年','月','日','时','分']) ->
     @configs = @getCSONfileConfig()
-    spanNumber = @configs.wordTimeSpan[span]
-    spanNumber = 300 if not spanNumber
-    @getTimeSpanObject t, spanNumber, spanlist
+    @spanNumber = @configs.wordTimeSpan[span]
+    @spanNumber = 300 if not @spanNumber
 
+  getMinTimeSpan: (t) =>
+    spanlist = []
+    if @spanNumber < 60 and @spanNumber >= 1
+      spanlist.push '秒'
+    else if @spanNumber >= 60 and @spanNumber < 3600
+      spanlist.push '分'
+    @getTimeSpanObject t, @spanNumber, spanlist, true
+
+  getTimeSpan: (t) =>
+    @getTimeSpanObject t, @spanNumber, @spanlist
   ###
     获取CSON配置
     @method getCSONfileConfig
@@ -23,7 +32,7 @@ class BasicTimeSpan
     csonFile = basePath + __dirname + '/datetimeConfig.cson'
     configs = CSON.load csonFile
 
-  getTimeSpanObject: (time, span = 1, spanlist = ['年','月','日','时','分']) =>
+  getTimeSpanObject: (time, span = 1, spanlist = ['年','月','日','时','分'], onlyMin = false) =>
     spanlist = _.compact spanlist
     if _.last(spanlist).indexOf('分') >= 0
       spanlist[spanlist.length - 1] = '分'
@@ -55,8 +64,8 @@ class BasicTimeSpan
   getYearObject : (t) =>
     time = Moment t
     yearObject =
-      timeID: Random.id()
-      id: new Mongo.ObjectID()
+      #timeID: Random.id()
+      #id: Mongo.ObjectID()
       type: 'year'
       year: time.year()
       start: Moment(time).startOf('year').toDate()
@@ -68,8 +77,8 @@ class BasicTimeSpan
     startOfMonth = new Date()
     endOfMonth = new Date()
     monthObject =
-      timeID: Random.id()
-      id: new Mongo.ObjectID()
+      #timeID: Random.id()
+      #id: Mongo.ObjectID()
       type: 'month'
       month: time.month() + 1
       year: time.year()
@@ -82,8 +91,8 @@ class BasicTimeSpan
     startOfDay = new Date()
     endOfDay = new Date()
     dayObject =
-      timeID: Random.id()
-      id: new Mongo.ObjectID()
+      #timeID: Random.id()
+      #id: Mongo.ObjectID()
       type: 'day'
       dateOfMonth: time.date()
       dayOfYear: time.dayOfYear()
@@ -101,8 +110,8 @@ class BasicTimeSpan
     startOfHour = new Date()
     endOfHour = new Date()
     hourObject =
-      timeID: Random.id()
-      id: new Mongo.ObjectID()
+      #timeID: Random.id()
+      #id: Mongo.ObjectID()
       type: 'hour'
       hour: time.hour()
       dateOfMonth: time.date()
@@ -135,7 +144,7 @@ class BasicTimeSpan
             position: i
     result
 
-  getMinuteObject : (t, span) =>
+  getMinuteObject : (t, span, withID = true) =>
     time = Moment t
     minute = time.minute()
     if span > 60
@@ -148,8 +157,6 @@ class BasicTimeSpan
     startOfMinute = new Date()
     endOfMinute = new Date()
     minuteObject =
-      timeID: Random.id()
-      id: new Mongo.ObjectID()
       type: 'minute'
       hourPosition: r.position
       hour: time.hour()
@@ -163,14 +170,16 @@ class BasicTimeSpan
       start: r.start
       end: r.end
       timeType: "Basic"
+    #if withID
+      #minuteObject.timeID = Random.id()
+      #minuteObject.id = Mongo.ObjectID()
+    minuteObject
 
-  getSecondObject : (t, span) =>
+  getSecondObject : (t, span, withID = true) =>
     time = Moment t
     second = time.second()
     r = @numberSpans 60, span, second, t, 'second'
     secondObject =
-      timeID: Random.id()
-      id: new Mongo.ObjectID()
       type: 'second'
       minute: time.minute()
       minutePosition: r.position
@@ -185,6 +194,18 @@ class BasicTimeSpan
       start: r.start
       end: r.end
       timeType: "Basic"
+    #if withID
+      #secondObject.timeID = Random.id()
+      #secondObject.id = Mongo.ObjectID()
+    secondObject
+
+getSecondPosition: (t, span) =>
+  so = @getSecondObject t, span, false
+  so.minutePosition
+
+getMinutePosition: (t, span) =>
+  mo = @getMinuteObject t, span, false
+  mo.hourPosition
 
 buildAPI = () =>
     timeSpanFunc = (urlParams) =>

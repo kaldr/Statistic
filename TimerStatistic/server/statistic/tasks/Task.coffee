@@ -1,13 +1,24 @@
 import * as Steps from './steps/index.coffee'
 import {Mongo} from 'meteor/mongo'
 import {Meteor} from 'meteor/meteor'
-
+import _ from 'lodash'
 class Task
   constructor: (@taskOb, @logger, @statisticTask) ->
     @configuration()
     @taskSteps = {}
+
   configuration: () =>
+  getDefaultQuery: () =>
+    query = {}
+    transformToObIDList = @statisticTask.objectIDParameters
+    _.map @statisticTask.defaultQuery, (value, key) ->
+      if transformToObIDList.indexOf(key) >= 0
+        query[key] = Mongo.ObjectID value
+      else
+        query[key] = value
+    query
   stepOnReject: () =>
+
   runStep: (result, stepOb) =>
     stepOb.id = new Mongo.ObjectID()
     #@logger.setStep stepOb
@@ -22,5 +33,6 @@ class Task
   runSteps: () =>
     result = []
     _.reduce @taskOb.steps, @runStep, @taskOb
+
 
 exports.Task = Task

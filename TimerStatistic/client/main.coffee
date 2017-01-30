@@ -1,3 +1,13 @@
 import angular from 'angular'
-import {Meteor} from 'meteor/meteor'
-import {HTTP} from 'meteor/http'
+import angularMeteor from 'angular-meteor'
+import {chart} from './chart.coffee'
+
+
+onReady = () =>
+  angular.bootstrap document, [
+    chart
+    angularMeteor
+  ]
+
+angular.element document
+    .ready onReady

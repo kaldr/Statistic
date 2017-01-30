@@ -8,14 +8,17 @@ class DateTime
   constructor: (span, structure = ['Basic']) ->
     @configuration(span, structure)
 
-  configuration: (span, structure) =>
+  configuration: ( span, structure) =>
+
     @time = Moment()
     span = 300 if not span
+    @span = span
     configs = @getCSONfileConfig()
     @structure = structure
     @publicWordTimeSpan = configs.wordTimeSpan
     @timeStructure = configs.timeStructure
     @timeStructureList = @buildSpanListFromSpan(span, structure)
+    @btsp = new BasicTimeSpan @time, @minSpan, @timeStructureList.Basic
 
   ###
     获取CSON配置
@@ -100,15 +103,33 @@ class DateTime
     spanList
 
 
+  getTimePositionOfSpan: (time, span) =>
+    bts = new BasicTimeSpan time, span
+    time = @time if not time
+    span = @span if not span
+    if span >= 60 then bts.getMinutePosition time, span else bts.getSecondPosition time, span
+
+
 
   getParentTimeSpan: () =>
 
+  getMinTimeSpans: (time) =>
+    time = @time if not time
+    result = {}
+    _.map @structure, (type) =>
+      result[type] = @getMinTimeSpan time, type
+    result
 
   getTimeSpans: (time) =>
+    time = @time if not time
     result = {}
     _.map @structure, (type) =>
       result[type] = @getTimeSpan time, type
     result
+
+  getMinTimeSpan: (time, timeType = 'Basic') =>
+    time = @time if not time
+    @["get#{timeType}MinTimeSpan"] time
 
   getTimeSpan: (time, timeType = 'Basic') =>
     time = @time if not time
@@ -122,8 +143,10 @@ class DateTime
     @return {object} 时间配置
   ###
   getBasicTimeSpan: (t) =>
-    btsp = new BasicTimeSpan t, @minSpan, @timeStructureList.Basic
-    btsp.timeSpan
+    @btsp.getTimeSpan t
+    @btsp.timeSpan
+    # btsp = new BasicTimeSpan t, @minSpan, @timeStructureList.Basic
+    # btsp.timeSpan
 
 
   ###
@@ -156,5 +179,46 @@ class DateTime
   getActivityTimeSpan: (time) =>
     undefined
 
+  ###
+    获取时间间隔
+    @method getBasicTimeSpan
+    @param {momentObject} time 时间
+    @return {object} 时间配置
+  ###
+  getBasicMinTimeSpan: (t) =>
+    @btsp.getMinTimeSpan t
+    # btsp = new BasicTimeSpan t, @minSpan, @timeStructureList.Basic
+    # btsp.timeSpan
+
+
+  ###
+    获取节假日的时间间隔
+    TODO: 要根据每年的节假日时间，来配置，需要详细了解相关信息
+    @method getVocationTimeSpan
+    @param {momentObject} time 时间
+    @return {object} 时间配置
+  ###
+  getVocationMinTimeSpan: (time) =>
+    undefined
+
+  ###
+    获取阴历的时间间隔
+    TODO: 要根据每年的阴历时间，来配置，需要详细了解相关信息
+    @method getLunarTimeSpan
+    @param {momentObject} time 时间
+    @return {object} 时间配置
+  ###
+  getLunarMinTimeSpan: (time) =>
+    undefined
+
+  ###
+    获取活动的时间间隔
+    TODO: 要根据每年我们的活动，来配置活动时间
+    @method getActivityTimeSpan
+    @param {momentObject} time 时间
+    @return {object} 时间配置
+  ###
+  getActivityMinTimeSpan: (time) =>
+    undefined
 
 exports.DateTime = DateTime

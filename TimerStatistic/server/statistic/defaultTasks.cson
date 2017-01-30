@@ -11,12 +11,12 @@ statistics:[
         DelStatus:0#未删除
         RecordType_ID:1#业务类型
         AddType:1#400客服电话
-      objectIDParameters:["SDID",'DestinationInfo.MainID']
+      objectIDParameters:["SDID",'DestinationInfo.MainID','destiniation']
       timeParameter:
         createTime:'Record_Time'
         updateTime:'UpdateTime'
         format:'Date'
-        timestructure:['basic']
+        timestructure:['Basic']
       parameters:{
         "SDID":1,
         'Record_Type':1
@@ -26,46 +26,42 @@ statistics:[
       }
 
       tasks:[
-        {
-          name:'InitializationTask'
-          description:"初始化原始数据的统计"
-          parameters:
-            start:"2016/10/1 9:30"
-            end:"2016/10/1 10:00"
-            timespan:300
-          steps:[
-            {
-              name:"GetCreatedDataOfTimespan"
-              description:"获取时间间隔的新增数据"
-            }
-            {
-              name:"UpdateStatisticDataByDatetime"
-              description:"更新当前时间段的统计数据，并逐步向上更新到年的统计"
-            }
-          ]
-        }
-        {
-          name:'AutoTaskWithTimeSpan'
-          description:"定时轮询新数据，更新新增数据的统计"
-          parameters:
-            timespan:600
-            start:"2016/10/1 9:30"
-            end:"2016/10/1 10:30"
-          steps:[
-            {
-              name:"GetUpdatedDataOfTimespan"
-              description:"获取时间间隔的新增和更新的数据"
-            }
-            {
-              name:"GetStatisticDataOfTimeSpan"
-              description:'获取这段时间的统计数据'
-            }
-            {
-              name:"UpdateStatisticDataByDatetime"
-              description:'更新当前时间段的统计数据，并逐步向上更新到年的统计'
-            }
-          ]
-        }
+        # {
+        #   name:'InitializationTask'
+        #   description:"初始化原始数据的统计"
+        #   parameters:
+        #     start:"2016/1/12 00:00"
+        #     end:"2017/1/21 23:59:59"
+        #     timespan:300
+        #   steps:[
+        #     {
+        #       name:"GetCreatedDataOfTimespan"
+        #       description:"获取时间间隔的新增数据"
+        #     }
+        #     {
+        #       name:"UpdateStatisticDataByDatetime"
+        #       description:"更新当前时间段的统计数据，并逐步向上更新到年的统计"
+        #     }
+        #   ]
+        # }
+        # {
+        #   name:'AutoTaskWithTimeSpan'
+        #   description:"定时轮询新数据，更新新增数据的统计"
+        #   parameters:
+        #     timespan:300
+        #     start:"2016/10/1 9:30"
+        #     end:"2016/10/1 10:30"
+        #   steps:[
+        #     {
+        #       name:"GetUpdatedDataOfTimespan"
+        #       description:"获取时间间隔的新增和更新的数据"
+        #     }
+        #     # {
+        #     #   name:"UpdateStatisticDataByDatetime"
+        #     #   description:'更新当前时间段的统计数据，并逐步向上更新到年的统计'
+        #     # }
+        #   ]
+        # }
       ]
     }
     {

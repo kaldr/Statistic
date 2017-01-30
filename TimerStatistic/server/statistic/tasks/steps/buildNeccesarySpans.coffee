@@ -1,17 +1,25 @@
+import {Meteor} from 'meteor/meteor'
+import {Mongo} from 'meteor/mongo'
 import {DateTime} from '/imports/util/datetime/datetime.coffee'
+import _ from "lodash"
+import {Step} from './Step.coffee'
+import * as Collections from '/imports/api/Collection/index.coffee'
 import Moment from 'moment'
-import {Task} from './Task.coffee'
-import _ from 'lodash'
-import * as db from '/imports/api/Collection/index.coffee'
-import {BuildNeccesarySpans} from './steps/buildNeccesarySpans.coffee'
 
-class InitializationTask extends Task
-  constructor: (@taskOb, @logger, @statisticTask) ->
-    super @taskOb, @logger, @statisticTask
+class BuildNeccesarySpans extends Step
 
-    @collection = db[@statisticTask.sourceCollection]
+  constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
+    super @stepOb, @logger, @taskOb, @statisticTask
+    @collection = Collections[@statisticTask.sourceCollection]
     @perFetch = 1000
-    @run()
+
+  getDataCount: () =>
+    @selector = @getDefaultQuery()
+    @selector[@statisticTask.timeParameter.createTime] =
+      $gte: new Date @taskOb.parameters.start
+      $lt: new Date @taskOb.parameters.end
+    count = @collection.find(@selector).count()
+
 
   generateSpansForAYearByDay: (startDate, endDate) =>
     if not startDate then startDay = Moment().year(year).month(0).date(1).hour(0).minute(0).second(0).millisecond(0) else startDay = startDate
@@ -29,8 +37,10 @@ class InitializationTask extends Task
     startTime = Moment new Date @taskOb.parameters.start
     endTime = Moment new Date @taskOb.parameters.end
     spans = @generateSpansForAYearByDay startTime, endTime
+    @spans = []
     _.map spans, @fetch
     #@fetch i, count, perFetch for i in [0...@fetchTimes]
+    console.log @spans
 
   getTimespansForFetchedData: (fetchedData) =>
 
@@ -65,8 +75,7 @@ class InitializationTask extends Task
               end: value.end
     spans
 
-  fetch: (dateObject, i, array) =>
-    console.log "%s/%s", i + 1, array.length
+  fetch: (dateObject, i) =>
     @selector = @getDefaultQuery()
     options =
       fields: {}
@@ -75,43 +84,8 @@ class InitializationTask extends Task
       $gte: dateObject.start
       $lte: dateObject.end
     data = @collection.find(@selector).fetch()
-    spans = @getTimespansForFetchedData data
-    _.map spans, (span) =>
-      @taskOb.startTime = Moment span.start
-      @taskOb.endTime = Moment span.end
-      @runSteps()
-
-  removeData: () =>
-    db[@statisticTask.targetCollection].remove {
-      taskID: @statisticTask.taskID
-    }
-
-  run: () =>
-    @removeData() #删除已经导入的数据
-    @fetchAll()
-
-  getDBData: () =>
+    @getTimespansForFetchedData data
 
 
 
-  buildNeccesarySpans: () =>
-
-
-  generateSpans: () =>
-    start = Moment new Date @taskOb.parameters.start
-    span = @taskOb.parameters.timespan
-    end = Moment new Date @taskOb.parameters.end ? Moment().endOf 'day'
-
-    total = (end - start) / 1000
-    spans = []
-    spanCount = _.ceil total / span
-
-    _.map [0...spanCount], (i) =>
-      start = Moment(new Date @taskOb.parameters.start).add span * i, 'seconds'
-      end = Moment(new Date @taskOb.parameters.start).add span * i + span, 'seconds'
-      spans.push
-        start: start
-        end: end
-    spans
-
-exports.InitializationTask = InitializationTask
+exports.BuildNeccesarySpans = BuildNeccesarySpans

@@ -33,3 +33,5 @@ http
 npm-bcrypt
 nimble:restivus
 udondan:bulk-collection-update
+aheissenberger:memjs
+meteorhacks:cluster

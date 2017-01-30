@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import {StatisticTaskLog} from '../../StatisticTaskLog.coffee'
-
+import {DateTime} from '/imports/util/datetime/datetime.coffee'
 class Step
     constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
       @configuration()
@@ -8,6 +8,41 @@ class Step
     setStep: (stepOb) =>
       @stepOb = stepOb
       @configuration()
+
+    getSpansNeedToUpdate: () =>
+      dt = new DateTime @taskOb.parameters.timespan
+      spans = dt.getTimeSpans @taskOb.startTime
+
+    ###
+      获取最小的时间间隔信息
+      @method getMinSpan
+      @return {object} 时间间隔信息
+    ###
+    getMinSpan : () =>
+      spans = @getSpansNeedToUpdate()
+      currentSpan = {}
+      _.map spans, (spansTypeData, spansType) =>#basic/lunar/... : {}
+        currentSpan[spansType] = {}
+        _.map spansTypeData, (data, timeType) =>#year/month/day... : {}
+          if timeType == @taskOb.minSpan
+            currentSpan[spansType][timeType] = _.clone data
+      currentSpan
+
+    ###
+      获取当前时间间隔维度的更高时间维度的时间间隔对象
+      @method getParentSpans
+      @param {object} input 任务对象
+      @return {object} 时间间隔信息
+    ###
+    getParentSpans: () =>
+      spans = @getSpansNeedToUpdate()
+      parentSpans = {}
+      _.map spans, (spansTypeData, spansType) =>#basic/lunar/... : {}
+        parentSpans[spansType] = {}
+        _.map spansTypeData, (data, timeType) =>#year/month/day... : {}
+          if timeType != @taskOb.minSpan
+            parentSpans[spansType][timeType] = _.clone data
+      parentSpans
 
     run: (result) =>
       if @runCheck() then @process?(result)
@@ -58,7 +93,7 @@ class Step
       transformToObIDList = @statisticTask.objectIDParameters
       _.map @statisticTask.defaultQuery, (value, key) ->
         if transformToObIDList.indexOf(key) >= 0
-          query[key] = new Mongo.ObjectID value
+          query[key] = Mongo.ObjectID value
         else
           query[key] = value
       query

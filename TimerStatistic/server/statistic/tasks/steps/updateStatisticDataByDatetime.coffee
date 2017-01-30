@@ -1,6 +1,7 @@
 import {Step} from './Step.coffee'
 import * as db from '/imports/api/Collection/index.coffee'
 import {Mongo} from 'meteor/mongo'
+import {Meteor} from 'meteor/meteor'
 
 class UpdateStatisticDataByDatetime extends Step
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
@@ -14,20 +15,26 @@ class UpdateStatisticDataByDatetime extends Step
 
   insertData: (data, spans) =>
     result = []
+    batch = db[@statisticTask.targetCollection].rawCollection().initializeUnorderedBulkOp() ;
     _.map spans, (spanData, spanType) =>
-      _.map spanData, (d, time) =>
+      _.map spanData, (sd, time) =>
         if data.length > 0
+          d =
+            start: sd.start
+            end: sd.end
           _.map data, (adata) =>
             _.map adata, (value, key) =>
-              if key != '_id'
-                d[key] = value
+              if key != '_id' and key!='count'
+                if @statisticTask.objectIDParameters.indexOf(key) >= 0
+                  d[key] = value._str
+                else
+                  d[key] = value
             d.taskID = @statisticTask.taskID
-            db[@statisticTask.targetCollection].insert d
+            count = adata.count
+            batch.find(d).upsert().updateOne {$inc: {count: count} } , {upsert: true}
+    execute = Meteor.wrapAsync(batch.execute, batch)
+    execute()
 
-  ###
-    如果不是直接插入数据，那么就应该更新相关的数据。
-
-  ###
   ###
     向统计数据库插入初始数据
     TODO: 改成批量插入
@@ -42,7 +49,6 @@ class UpdateStatisticDataByDatetime extends Step
 
   update: (result) =>
     data = result.data
-    diff = result.diff
     # _.map data, (adata) =>
     #   db[@statisticTask.targetCollection].update {timeID: adata.timeID} , {$inc: {count: diff} }
 

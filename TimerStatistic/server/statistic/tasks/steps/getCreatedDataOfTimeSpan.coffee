@@ -32,16 +32,11 @@ class GetCreatedDataOfTimespan extends Step
     ]
 
 
-
   getAggregatedData: (input) =>
     @buildInput(input)
     @collection.aggregate @pipeline
     resultCollection = Collections[@statisticTask.aggregateOutCollection]
     result = resultCollection.find({} ).fetch()
-
-  getSpansNeedToUpdate: (input) =>
-    dt = new DateTime input.parameters.timespan
-    spans = dt.getTimeSpans input.startTime
 
   process: (input) =>
     #@logger.startRunning '统计时间段内的新增信息'
