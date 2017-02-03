@@ -53,12 +53,22 @@ class Statistic
       @config.taskSource = 'cson'
 
   ###
-    运行一个任务
+    利用settimeout运行一个任务
     @method runTask
     @param {object} task 任务对象
     @return {null} null
   ###
   runTask: (task) =>
+    @task=task
+    Meteor.setTimeout @run,10
+
+  ###*
+   * 运行一个方法
+   * @param  {object} task 任务对象
+   * @return {null}      无
+  ###
+  run:()=>
+    task=@task
     task.id = new Mongo.ObjectID()
     @logger.setStatisticTask task
     currentTask = new StatisticTasks task, @logger

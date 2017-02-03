@@ -17,6 +17,8 @@ class InitializationTask extends Task
     if not startDate then startDay = Moment().year(year).month(0).date(1).hour(0).minute(0).second(0).millisecond(0) else startDay = startDate
     if not endDate then endDay = Moment().year(year + 1).month(0).date(1).hour(0).minute(0).second(0).millisecond(0) else endDay = endDate
     dates = []
+    console.log startDate
+    console.log endDate
     currentDay = startDay
     while currentDay <= endDay
       dates.push
@@ -29,6 +31,7 @@ class InitializationTask extends Task
     startTime = Moment new Date @taskOb.parameters.start
     endTime = Moment new Date @taskOb.parameters.end
     spans = @generateSpansForAYearByDay startTime, endTime
+    #console.log spans
     _.map spans, @fetch
     #@fetch i, count, perFetch for i in [0...@fetchTimes]
 
@@ -74,8 +77,12 @@ class InitializationTask extends Task
     @selector[@statisticTask.timeParameter.createTime] =
       $gte: dateObject.start
       $lte: dateObject.end
-    data = @collection.find(@selector).fetch()
+    #console.log @selector
+    data = @collection.find(@selector,options).fetch()
+    console.log "current day has #{data.length} pieces of data."
+    #console.log data
     spans = @getTimespansForFetchedData data
+    console.log "current day has #{spans.length} spans to fetch."
     _.map spans, (span) =>
       @taskOb.startTime = Moment span.start
       @taskOb.endTime = Moment span.end
@@ -95,7 +102,6 @@ class InitializationTask extends Task
 
 
   buildNeccesarySpans: () =>
-
 
   generateSpans: () =>
     start = Moment new Date @taskOb.parameters.start

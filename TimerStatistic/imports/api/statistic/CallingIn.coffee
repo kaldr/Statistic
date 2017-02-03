@@ -35,7 +35,7 @@ class CallingIn extends BasicStatistic
         selector[key] = value
       if acceptNumberList.indexOf(key) >= 0
         selector[key] = parseInt value
-    console.log selector
+    #console.log selector
     @collection.find(selector).fetch()
 
 buildStatisticAPI new CallingIn()

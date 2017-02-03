@@ -8,6 +8,7 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
     super @stepOb, @logger, @taskOb, @statisticTask
 
+
   buildUpdateAggregatePipeline: (input) =>
     @collection = Collections[@statisticTask.sourceCollection]
     @group =
@@ -29,8 +30,8 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     @selector[@statisticTask.timeParameter.updateTime] =
       $gte: input.startTime.toDate()
       $lt: input.endTime.toDate()
-    # @selector[@statisticTask.timeParameter.createTime] =
-    #   $lt: input.startTime.toDate()
+    @selector[@statisticTask.timeParameter.createTime] =
+      $lt: input.startTime.toDate()
 
   ###
     获取更新的数据
@@ -43,7 +44,7 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     @buildUpdateAggregatePipeline()
     fields = {_id: 1}
     fields[@statisticTask.timeParameter.createTime] = 1
-    console.log @selector
+    #console.log @selector
     @collection.find(@selector, {fields: fields} ).fetch()
 
   getStatisticSelector: (data) =>
@@ -61,7 +62,6 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
   ###
   getAggregatedData: (input) =>
     result = super input
-
 
   ###
     构建最小时间片的统计数据
@@ -88,9 +88,45 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
   buildParentSpanStatistic: (input, minSpanStatistic) =>
     parentSpans = @getParentSpans()
     result =
-      data: minSpanStatistic#本质是各个维度的统计结果
+      data: minSpanStatistic.data#本质是各个维度的统计结果
       spans: parentSpans#本质是要更新的时间的维度
-      type: 'update'
+      type: 'insert'
+
+  getAggregatesForUpdatedData:(input,newlyUpdatedData)=>
+    spans=[]
+    minspantype='minute'
+    dt=new DateTime @taskOb.parameters.timespan
+    _.map newlyUpdatedData,(data)=>
+      s=dt.getMinTimeSpans data[@statisticTask.timeParameter.createTime]
+      _.map s,(timeTypeData,timeType)=>
+        _.map timeTypeData,(spanTypeData,spanType)=>
+          minspantype=spanType
+          flag=true
+          _.map spans,(span)=>
+            if span.start.toString()==spanTypeData.start.toString() and span.end.toString()==spanTypeData.end.toString()
+              flag=false
+          if flag
+            spans.push
+              start:spanTypeData.start
+              end:spanTypeData.end
+              timeType:timeType
+    data=[]
+    _.map spans,(span)=>
+      @buildInput input
+      @selector[@statisticTask.timeParameter.createTime] =
+        $gte: span.start
+        $lte: span.end
+      # console.log '===========pipeline============'
+      # console.log @pipeline
+      Collections[@statisticTask.sourceCollection].aggregate @pipeline
+      d=Collections[@statisticTask.aggregateOutCollection].find().fetch()
+      _.map d,(ditem)=>
+        ditem.start=span.start
+        ditem.end=span.end
+        ditem.type=_.lowerCase minspantype
+      data=_.union data, d
+    data
+
 
   getTimespansForUpdatedData: (input, newlyUpdatedData) =>
     timeList = []
@@ -130,25 +166,56 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
   getStatisticDataOfTimeSpans: ( input, newlyUpdatedData) =>
       spans = @getTimespansForUpdatedData input, newlyUpdatedData
       collection = Collections[@statisticTask.targetCollection]
-      selector =
-        $or: spans
-      data = collection.find selector
-        .fetch()
-      console.log data.length
+      if spans.length
+        selector =
+          type:"minute"
+          $or: spans
+        #console.log selector
+        data = collection.find selector
+          .fetch()
+      else
+        data=[]
+      #console.log data
       data
 
   getCurrentStatisticDataOfTimeSpans : (input, newlyUpdatedData) =>
-      @buildUpdateTimeInput input
-      @buildUpdateAggregatePipeline()
-      fields = {_id: 1}
-      fields[@statisticTask.timeParameter.createTime] = 1
-      console.log @selector
-      @collection.aggregate @pipeline
+      @getAggregatesForUpdatedData input,newlyUpdatedData
 
+
+
+  ###
+  log
+  000000000000000000156297
+  ###
   getDifferenceOfData: (input, newlyUpdatedDataStatistic, currentUpdatedDataStatistic) =>
-    #最后一个方法
+    _.map currentUpdatedDataStatistic,(sd)=>
+      # console.log "========sd========"
+      # console.log sd
+      existedStatistic=_.filter newlyUpdatedDataStatistic,{start:sd.start,end:sd.end,type:sd.type}
+      
+      originnalStatistic=
+          count:0
+      exist=false      
+      _.map existedStatistic,(esd)=>
+        if not exist
+          flag=true
+          _.map @statisticTask.parameters,(paraV,paraK)=>
+            if @statisticTask.objectIDParameters.indexOf(paraK)>=0
+              if esd[paraK]!=sd[paraK]._str
+                flag=false
+            else 
+              if esd[paraK]!=sd[paraK]
+                flag=false
+          if flag
+            originnalStatistic=esd
+            exist=true
+      # console.log "========originnalStatistic========" 
+      # console.log originnalStatistic
+      count=originnalStatistic.count
+      console.log "=============result=============="
+      console.log "#{sd.start},#{sd.end}:existed:#{count} now:#{sd.count} diff:#{sd.count-count}"
 
-  constructResult: (input, differenceOfData) =>
+
   ###
     运行
     @method process
@@ -163,12 +230,13 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     # DONE
     # 通过aggregate，获取这个时间间隔下的数据增量
     newlyAddedStatisticData = @getAggregatedData input
-
+    #console.log newlyAddedStatisticData
     #--------------------------------------------------------
     # 1.2 向statistic表插入当前时间间隔下的统计数据
     # TODO
     # 当前时间片，数据库中还不存在，因此，可以直接插入，数据结构是{data:[],spans:{Basic:[{Minute:{...}}],...},type:'insert'}，可以被下一步直接识别
     minSpanStatistic = @buildMinSpanStatistic input, newlyAddedStatisticData
+
 
     #--------------------------------------------------------
     # 1.3 更新更高维度的数据，所有的都增加相关的数量
@@ -184,16 +252,20 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     # 2.1 获取时间片之内更新的数据
     # 获取到当前时间间隔下更新的数据的添加时间
     newlyUpdatedData = @getUpdatedData input
+    # console.log "============newlyUpdatedData============"
+    # console.log newlyUpdatedData
 
     #--------------------------------------------------------
     # 2.2 从原始数据表中，获取最新的每个添加时间aggregate统计
     # 这是最新的统计，将会把这个时间段的统计，都变成这个模样
     newlyUpdatedDataStatistic = @getStatisticDataOfTimeSpans input, newlyUpdatedData
+    #console.log newlyUpdatedDataStatistic
 
     #--------------------------------------------------------
     # 2.3 从统计表中，获取每个添加时间的统计信息
     # 获取新的统计信息的目的，是为了计算这个时间维度内的数量的变化，比如获取了所有5分钟统计的数量之后，可以获取每个数据统计维度的数据变化
     currentUpdatedDataStatistic = @getCurrentStatisticDataOfTimeSpans input, newlyUpdatedData
+    #console.log util.inspect currentUpdatedDataStatistic,true,5
 
     #--------------------------------------------------------
     # 2.4 新老统计数据进行对比，获取每个数据统计维度的数据变化
@@ -202,7 +274,11 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
 
     #--------------------------------------------------------
     # 2.5 根据变化，获得最后的结果，并且输出到下一步中
-    result = [ minSpanStatistic, parentSpanStatistic, differenceOfData ]
+    result = [
+      minSpanStatistic,
+      parentSpanStatistic,
+      differenceOfData
+    ]
 
 
 exports.GetUpdatedDataOfTimespan = GetUpdatedDataOfTimespan

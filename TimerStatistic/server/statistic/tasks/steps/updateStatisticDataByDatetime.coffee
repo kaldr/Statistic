@@ -2,6 +2,7 @@ import {Step} from './Step.coffee'
 import * as db from '/imports/api/Collection/index.coffee'
 import {Mongo} from 'meteor/mongo'
 import {Meteor} from 'meteor/meteor'
+import util from 'util'
 
 class UpdateStatisticDataByDatetime extends Step
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
@@ -19,19 +20,28 @@ class UpdateStatisticDataByDatetime extends Step
     _.map spans, (spanData, spanType) =>
       _.map spanData, (sd, time) =>
         if data.length > 0
-          d =
-            start: sd.start
-            end: sd.end
+          d={}
+          _.map sd,(value,key)=>
+            if ['_id','id','timeID'].indexOf(key)==-1
+              d[key]=value
           _.map data, (adata) =>
             _.map adata, (value, key) =>
-              if key != '_id' and key!='count'
+              if key != '_id' and key!='count' and key!='ids'
                 if @statisticTask.objectIDParameters.indexOf(key) >= 0
                   d[key] = value._str
                 else
                   d[key] = value
             d.taskID = @statisticTask.taskID
             count = adata.count
-            batch.find(d).upsert().updateOne {$inc: {count: count} } , {upsert: true}
+            #console.log util.inspect d,true,5
+            #console.log count
+            config=
+              $inc: 
+                count: count
+              # $push:
+              #   ids:adata.ids
+            ob=_.clone d
+            batch.find(ob).upsert().updateOne  config, {upsert: true}
     execute = Meteor.wrapAsync(batch.execute, batch)
     execute()
 

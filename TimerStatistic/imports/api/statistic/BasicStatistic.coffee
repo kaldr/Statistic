@@ -5,16 +5,20 @@ import Moment from 'moment'
 class BasicStatistic
   constructor: (@apiName, @collection, @bannedAPIList = []) ->
 
-  getStatistic : (timeType, spanType, query) =>
+  getStatistic : (timeType, spanType, request) =>
+    query=request.query
+    chartType=request.chartType
     selector = {}
     selector.timeType = timeType
     selector.type = spanType
     # selector.start = Moment(query.start).subtract(8,'hour').toDate()
     # selector.end =
     selector.start =
-      $gte: Moment(query.start).subtract(8, 'hour').toDate()
+      #$gte: Moment(query.start).subtract(8, 'hour').toDate()
+      $gte: Moment(new Date(query.start)).toDate()
     selector.end =
-      $lte: Moment(query.end).subtract(8, 'hour').toDate()
+      #$lte: Moment(query.end).subtract(8, 'hour').toDate()
+      $lte: Moment(new Date(query.end)).toDate()
     data = @fetchData selector, query
     @generateTimeWithData timeType, spanType, query, data
 
@@ -30,14 +34,20 @@ class BasicStatistic
       minute: "MM/DD HH:mm:ss"
     ob[timeType]
 
-  generateTimeWithData: (timeType, spanType, query, data) =>
+  generateTimeWithData: (timeType, spanType, query, data,chartType='chart.js') =>
+    if chartType=='chart.js'
+      @getChartJSData timeType, spanType, query, data
+
+  getChartJSData:(timeType, spanType, query, data)=>
     result =
       labels: []
       data: []
-    startTime = Moment(new Date query.start).subtract(8, 'hour')
-    console.log startTime
-    endTime = Moment(new Date query.end).subtract(8, 'hour')
-    console.log endTime
+    #startTime = Moment(new Date query.start).subtract(8, 'hour')
+    startTime = Moment(new Date query.start)
+    #console.log startTime
+    #endTime = Moment(new Date query.end).subtract(8, 'hour')
+    endTime = Moment(new Date query.end)
+    #console.log endTime
     current = startTime
     while current < endTime
       result.labels.push current.format @getTimeFormat spanType
@@ -51,8 +61,12 @@ class BasicStatistic
       if query.span
         current = current.add query.span.count, query.span.type
       else
-        current = current.add 1, spanType
-    result
+        if spanType=='minute'
+          num=5
+        else 
+          num=1
+        current = current.add num, spanType
+    result    
 
   apiConfiguration: (routes) =>
     r = []

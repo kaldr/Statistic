@@ -67,6 +67,7 @@ class Step
         fields[key] = "$_id." + key
       fields.count = "$count"
       fields._id = '$id'
+      #fields.ids="$ids"
       fields
 
     getGroupID: () =>

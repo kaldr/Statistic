@@ -2,8 +2,9 @@ import 'chart.js/dist/Chart.min.js'
 import 'angular-chart.js/dist/angular-chart.min.js'
 import './chart.styl'
 import templateUrl from './chartExample.ng.jade'
-name = 'chart'
 import {CallingIn} from '/imports/api/statistic/CallingIn.coffee'
+
+name = 'chart'
 
 class chartController
   constructor: ($scope, $reactive, $http) ->
@@ -12,15 +13,29 @@ class chartController
     $scope.onClick = (points, evt) =>console.log points, evt
     @getData $scope, $http
 
+
   getData: ($scope, $http, data) =>
     if not data
       data =
-        start: '2016-01-10'
-        end: '2016-12-31'
-        #SDID: '000000000000000000000001'
-        #destiniation: '000000000000000000000696'
+        query:
+          start: '2014-1-1 00:00:00'
+          end:"2014-1-1 23:59:59"
+          #end: '2017-1-10'
+          #SDID: '000000000000000000000001'
+          #ProductAreaType_ID: 3
+          #Record_Type:1
+          #LineType_ID:1
+          #destination:'000000000000000000003514'
+        chartType:'chat.js'
+    
     fail = ->
+    
     success = (response) =>
+      if not $scope.data
+        $scope.data=[]
+      if not $scope.labels
+        $scope.labels=[]
+      
       $scope.dataReady = true
       $scope.data = [response.data.data]
       $scope.series = ['电话意向']
@@ -29,7 +44,7 @@ class chartController
       console.log $scope.data
     $http({
       method: "POST"
-      url: "/api/statistic/callingIn/Basic/day/"
+      url: "/api/statistic/callingIn/Basic/hour/"
       data: data
     } ).then(success, fail)
 
@@ -52,4 +67,5 @@ chart = angular.module name, [
   }
   .config config
   .name
+
 exports.chart = chart
