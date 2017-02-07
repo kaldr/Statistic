@@ -1,1 +1,3 @@
-export {Customer_Record, Aggregate_Statistic_CallingInByProduct, Customer_Record_GetOne, Statistic_CallingInByProduct} from './Customer_Record.coffee'
+export {Customer_Record, Statistic_CallingInByProduct} from './Customer_Record.coffee'
+export {Orders, Statistic_OrdersByProductAndStaff,Statistic_OrdersByProductAndOP,Statistic_OrdersByProductAndSales} from './Orders.coffee'
+

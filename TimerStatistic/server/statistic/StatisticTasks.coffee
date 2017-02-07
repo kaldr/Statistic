@@ -13,7 +13,7 @@ import {DateTime} from '/imports/util/datetime/datetime.coffee'
 
 class StatisticTasks
   constructor: (@task, @logger) ->
-
+  	# @task.aggregateOutCollection=@task.aggregateOutCollection+process.env.CLUSTER_WORKER_ID
   run: () =>
     _.map @task.tasks, @runTask
 

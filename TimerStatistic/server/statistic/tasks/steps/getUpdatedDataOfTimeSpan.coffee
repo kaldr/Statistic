@@ -3,11 +3,11 @@ import * as Collections from '/imports/api/Collection/index.coffee'
 import {DateTime} from '/imports/util/datetime/datetime.coffee'
 import _ from 'lodash'
 import util from 'util'
+import {Mongo} from 'meteor/mongo'
 
 class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
     super @stepOb, @logger, @taskOb, @statisticTask
-
 
   buildUpdateAggregatePipeline: (input) =>
     @collection = Collections[@statisticTask.sourceCollection]
@@ -22,11 +22,11 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
       {$project: @getFields() }
       {$group: @group}
       {$project: @getFinalFields() }
-      {$out: @statisticTask.aggregateOutCollection}
     ]
 
   buildUpdateTimeInput: (input) =>
     @selector = @getDefaultQuery()
+    #@selector={}
     @selector[@statisticTask.timeParameter.updateTime] =
       $gte: input.startTime.toDate()
       $lt: input.endTime.toDate()
@@ -34,14 +34,20 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
       $lt: input.startTime.toDate()
 
   ###
-    获取更新的数据
+    获取更新的数据 
     @method getUpdatedData
     @param {object} input 任务对象
     @return {array} 结果数组
   ###
   getUpdatedData: (input) =>
-    @buildUpdateTimeInput input
-    @buildUpdateAggregatePipeline()
+    @selector={}
+    @selector[@statisticTask.timeParameter.updateTime] =
+      $gte: input.startTime.toDate()
+      $lt: input.endTime.toDate()
+    @selector[@statisticTask.timeParameter.createTime] =
+      $lt: input.startTime.toDate()
+    
+    #@buildUpdateAggregatePipeline()
     fields = {_id: 1}
     fields[@statisticTask.timeParameter.createTime] = 1
     #console.log @selector
@@ -111,22 +117,22 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
               end:spanTypeData.end
               timeType:timeType
     data=[]
+    antiDefaultQueryData=[]
     _.map spans,(span)=>
       @buildInput input
       @selector[@statisticTask.timeParameter.createTime] =
         $gte: span.start
         $lte: span.end
+
       # console.log '===========pipeline============'
       # console.log @pipeline
-      Collections[@statisticTask.sourceCollection].aggregate @pipeline
-      d=Collections[@statisticTask.aggregateOutCollection].find().fetch()
+      d=Collections[@statisticTask.sourceCollection].aggregate @pipeline
       _.map d,(ditem)=>
         ditem.start=span.start
         ditem.end=span.end
         ditem.type=_.lowerCase minspantype
       data=_.union data, d
     data
-
 
   getTimespansForUpdatedData: (input, newlyUpdatedData) =>
     timeList = []
@@ -135,7 +141,7 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
 
     _.map timeList, (RecordTime) =>
       dt = new DateTime @taskOb.parameters.timespan
-      spanList.push dt.getTimeSpans RecordTime
+      spanList.push dt.getMinTimeSpans RecordTime
     spans = []
     excludeTime = []
 
@@ -162,13 +168,13 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
               start: value.start
               end: value.end
     spans
-
+ 
   getStatisticDataOfTimeSpans: ( input, newlyUpdatedData) =>
       spans = @getTimespansForUpdatedData input, newlyUpdatedData
       collection = Collections[@statisticTask.targetCollection]
       if spans.length
         selector =
-          type:"minute"
+          #type:"minute"
           $or: spans
         #console.log selector
         data = collection.find selector
@@ -182,21 +188,70 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
       @getAggregatesForUpdatedData input,newlyUpdatedData
 
 
+  getDifferenceOfData: (input, newlyUpdatedDataStatistic, currentUpdatedDataStatistic,newlyUpdatedData) =>
+    differenceData=[]
+    _.map newlyUpdatedDataStatistic,(sd)=>
+      if sd.type!='minute' then return
+      # console.log "========sd========"
+      # console.log sd
+      existedStatistic=_.filter currentUpdatedDataStatistic,{start:sd.start,end:sd.end}    
+      originnalStatistic=
+          count:0
+      exist=false 
+      _.map existedStatistic,(esd)=>
+        #已有的统计中，还没有找到包含新的统计的数据
+        # console.log '============esd============'
+        # console.log esd
+        if not exist
+          flag=true
+          _.map @statisticTask.parameters,(paraV,paraK)=>
+            if @statisticTask.objectIDParameters.indexOf(paraK)>=0
+              if esd[paraK]._str!=sd[paraK]
+                flag=false
+            else 
+              if esd[paraK]!=sd[paraK]
+                flag=false
+          if flag
+            originnalStatistic=esd
+            exist=true
+  
 
-  ###
-  log
-  000000000000000000156297
-  ###
-  getDifferenceOfData: (input, newlyUpdatedDataStatistic, currentUpdatedDataStatistic) =>
+        #已有的统计，在当前的统计中是否存在 
+        
+
+      # console.log "========originnalStatistic========" 
+      # console.log originnalStatistic
+      # 
+      count=originnalStatistic.count
+      diff=count-sd.count
+      if diff!=0
+        diffData={}
+        _.map sd,(value,key)=>
+          if ['_id','id','timeID','ids'].indexOf(key)==-1
+            if @statisticTask.objectIDParameters.indexOf(key)>=0
+              diffData[key]=new Mongo.ObjectID value
+            else
+              diffData[key]=value
+        diffData.count=diff
+        differenceData.push diffData
+        # console.log diffData
+        # differenceData.push
+        #   start:sd.start
+        #   diff:diff
+      # console.log "=============result=============="
+      # console.log "#{sd.start},#{sd.end}:existed:#{sd.count} now:#{count} diff:#{count-sd.count}"
+           
     _.map currentUpdatedDataStatistic,(sd)=>
       # console.log "========sd========"
       # console.log sd
-      existedStatistic=_.filter newlyUpdatedDataStatistic,{start:sd.start,end:sd.end,type:sd.type}
-      
+      existedStatistic=_.filter newlyUpdatedDataStatistic,{start:sd.start,end:sd.end,type:sd.type}    
       originnalStatistic=
           count:0
-      exist=false      
+      exist=false 
       _.map existedStatistic,(esd)=>
+        #已有的统计中，还没有找到包含新的统计的数据
+        # console.log '============esd============'
+        # console.log esd
         if not exist
           flag=true
           _.map @statisticTask.parameters,(paraV,paraK)=>
@@ -209,20 +264,51 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
           if flag
             originnalStatistic=esd
             exist=true
+  
+        #已有的统计，在当前的统计中是否存在 
+      
       # console.log "========originnalStatistic========" 
       # console.log originnalStatistic
-      count=originnalStatistic.count
-      console.log "=============result=============="
-      console.log "#{sd.start},#{sd.end}:existed:#{count} now:#{sd.count} diff:#{sd.count-count}"
+      #
+      if not exist 
+        count=originnalStatistic.count
+        diff=sd.count-count
+        if diff!=0
+          diffData=_.clone sd
+          diffData.count=diff
+          differenceData.push diffData
+        #   console.log diffData
+        # console.log "=============result for nonexistances=============="
+        # console.log "#{sd.start},#{sd.end}:existed:#{count} now:#{sd.count} diff:#{sd.count-count}"
+    @constructDiffData differenceData
 
+      
 
-  ###
-    运行
+  constructDiffData:(differenceData)=>
+    result=[]
+    _.map differenceData,(data)=>
+      dt=new DateTime @taskOb.parameters.timespan
+      spans=dt.getTimeSpans data.start
+      resultData={}
+      _.map data,(value,key)=>
+        if _.keys(@statisticTask.parameters).indexOf(key)>=0
+          resultData[key]=value
+      resultData.count=data.count
+      result.push 
+        data:[resultData]
+        spans:spans
+        type:'insert'
+    # console.log result
+    result   
+
+  ### 
+    运行 
     @method process
     @param {object} input 任务对象
     @return {object} 结果对象
   ###
   process: (input) =>
+    result=[]
     #========================================================
     # 1.处理新增的数据
     #========================================================
@@ -236,7 +322,8 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     # TODO
     # 当前时间片，数据库中还不存在，因此，可以直接插入，数据结构是{data:[],spans:{Basic:[{Minute:{...}}],...},type:'insert'}，可以被下一步直接识别
     minSpanStatistic = @buildMinSpanStatistic input, newlyAddedStatisticData
-
+    if minSpanStatistic.data.length
+      result.push minSpanStatistic
 
     #--------------------------------------------------------
     # 1.3 更新更高维度的数据，所有的都增加相关的数量
@@ -245,7 +332,8 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     # 由于是增量数据，每个要更改的时间片统计，只需要增加增量计数值即可。
     # 数据结构{data:[{selector:{},data:{}},...],type:'update'},其中selector是每条数据的查询条件，data是新数据结构
     parentSpanStatistic = @buildParentSpanStatistic input, minSpanStatistic
-
+    if parentSpanStatistic.data.length
+      result.push parentSpanStatistic
     #========================================================
     # 2.处理更新的数据
     #========================================================
@@ -270,15 +358,12 @@ class GetUpdatedDataOfTimespan extends GetCreatedDataOfTimespan
     #--------------------------------------------------------
     # 2.4 新老统计数据进行对比，获取每个数据统计维度的数据变化
     # 获得了各个统计维度的变化之后，才可以对更高维度的数据进行更新
-    differenceOfData = @getDifferenceOfData input, newlyUpdatedDataStatistic, currentUpdatedDataStatistic
-
+    differenceOfData = @getDifferenceOfData input, newlyUpdatedDataStatistic, currentUpdatedDataStatistic,newlyUpdatedData
+    if differenceOfData.length
+      result=_.union result, differenceOfData
     #--------------------------------------------------------
-    # 2.5 根据变化，获得最后的结果，并且输出到下一步中
-    result = [
-      minSpanStatistic,
-      parentSpanStatistic,
-      differenceOfData
-    ]
+    # 2.5 根据变化，获得最后的结果，
+    result
 
 
 exports.GetUpdatedDataOfTimespan = GetUpdatedDataOfTimespan

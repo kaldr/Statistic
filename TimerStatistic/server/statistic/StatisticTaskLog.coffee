@@ -95,6 +95,6 @@ class StatisticTaskLog
   log: (content) =>
     content.datetime = new Date()
     console.log content.text + "|" + content.description
-    StatisticTaskLogCollection.insert content
+    #StatisticTaskLogCollection.insert content
 
 exports.StatisticTaskLog = StatisticTaskLog

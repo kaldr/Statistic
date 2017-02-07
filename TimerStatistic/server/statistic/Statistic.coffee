@@ -122,7 +122,7 @@ setDefaultTasks = () =>
         if not StatisticTasksCollection.findOne {name: task.name}
           StatisticTasksCollection.insert task
 ###
-  初始化
+  初始化 
   @method initiation
   @return {无} 无
 ###

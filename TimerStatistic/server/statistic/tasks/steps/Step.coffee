@@ -12,7 +12,6 @@ class Step
     getSpansNeedToUpdate: () =>
       dt = new DateTime @taskOb.parameters.timespan
       spans = dt.getTimeSpans @taskOb.startTime
-
     ###
       获取最小的时间间隔信息
       @method getMinSpan
@@ -63,18 +62,31 @@ class Step
 
     getFinalFields: () =>
       fields = {}
-      _.map @statisticTask.parameters, (value, key) ->
-        fields[key] = "$_id." + key
+      _.map @statisticTask.parameters, (value, key) =>
+        if @statisticTask.sumValueParameters.indexOf(key)==-1
+          fields[key] = "$_id." + key
+        else
+          fields[key]="$#{key}"
+      
       fields.count = "$count"
+      fields["ids"]="$ids"
       fields._id = '$id'
-      #fields.ids="$ids"
+      
       fields
 
     getGroupID: () =>
       group = {}
-      _.map @statisticTask.parameters, (value, key) ->
-        group[key] = "$" + key
+      #TODO: 在有地点字段出现时，要保证可以根据各级地点进行统计
+      #TODO: 在有部门字段出现时，要保证可以根据部门的各个层级进行统计
+      _.map @statisticTask.parameters, (value, key) =>
+        if @statisticTask.sumValueParameters.indexOf(key)==-1
+          group[key] = "$" + key
       group
+
+    getSumParameters:()=>
+      _.map @statisticTask.sumValueParameters,(value)=>
+        @group[value]=
+          $sum:"$#{value}"
 
     getIndex: () =>
       index = {}
@@ -87,16 +99,24 @@ class Step
       _.map @statisticTask.parameters, (value, key) ->
           fields[key] = value
       fields["_id"] = 1
+
       fields
 
+    ###*
+     * 获取任务配置中默认的查询条件
+     * @return {object} 查询条件，可以直接用于mongodb的query中
+    ###
     getDefaultQuery: () =>
       query = {}
       transformToObIDList = @statisticTask.objectIDParameters
-      _.map @statisticTask.defaultQuery, (value, key) ->
+      addKeyAndValue=(value,key)=>
         if transformToObIDList.indexOf(key) >= 0
-          query[key] = Mongo.ObjectID value
+          query[key] = new Mongo.ObjectID value
         else
-          query[key] = value
+          query[key] = value        
+      _.map @statisticTask.defaultQuery, addKeyAndValue
+      # _.map @statisticTask.defaultQueryArray,(keyValuePair)=>
+      #   addKeyAndValue keyValuePair.value,keyValuePair.key
       query
 
 exports.Step = Step

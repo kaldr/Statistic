@@ -11,21 +11,55 @@ class chartController
     $reactive this
       .attach $scope
     $scope.onClick = (points, evt) =>console.log points, evt
-    @getData $scope, $http
+    #@getData $scope, $http
+    @getOrderData $scope,$http
 
+  getOrderData: ($scope, $http, data) =>
+    if not data
+      data =
+        query:
+          start: '2014-1-1 00:00:00'
+          end:"2017-1-1 23:59:59"
+          #end: '2017-1-10'
+          # SDID: '000000000000000000000001'
+          # ProductAreaType_ID: 1
+          # Record_Type:1
+          # LineType_ID:2
+          #destination:'000000000000000000003602'
+        chartType:'chat.js'
+    
+    fail = ->
+    
+    success = (response) =>
+      if not $scope.Orderdata
+        $scope.Orderdata=[]
+      if not $scope.Orderlabels
+        $scope.Orderlabels=[]
+      
+      $scope.OrderdataReady = true
+      $scope.Orderdata = [response.data.data]
+      $scope.Orderseries = ['订单']
+      $scope.Orderlabels = response.data.labels
+      console.log $scope.Orderlabels
+      console.log $scope.Orderdata
+    $http({
+      method: "POST"
+      url: "/api/statistic/orders/Basic/day/"
+      data: data
+    } ).then(success, fail)
 
   getData: ($scope, $http, data) =>
     if not data
       data =
         query:
           start: '2014-1-1 00:00:00'
-          end:"2014-1-1 23:59:59"
+          end:"2014-3-30 23:59:59"
           #end: '2017-1-10'
-          #SDID: '000000000000000000000001'
-          #ProductAreaType_ID: 3
-          #Record_Type:1
-          #LineType_ID:1
-          #destination:'000000000000000000003514'
+          SDID: '000000000000000000000001'
+          ProductAreaType_ID: 1
+          Record_Type:1
+          LineType_ID:2
+          #destination:'000000000000000000003602'
         chartType:'chat.js'
     
     fail = ->
@@ -44,10 +78,9 @@ class chartController
       console.log $scope.data
     $http({
       method: "POST"
-      url: "/api/statistic/callingIn/Basic/hour/"
+      url: "/api/statistic/callingIn/Basic/day/"
       data: data
     } ).then(success, fail)
-
 
 
 config = (ChartJsProvider) ->

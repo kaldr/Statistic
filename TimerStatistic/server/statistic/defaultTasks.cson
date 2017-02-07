@@ -1,11 +1,124 @@
 statistics:[
+    #已签订单统计(按产品属性和职员属性)
     {
-      taskID:'InitializationTask20170202'
+      taskID:'InitializationOrderTask20170205'
+      name:"OrderStatisticByProductAndSales"
+      description:"订单统计(按产品属性和员工属性)"
+      sourceCollection:"Orders"
+      targetCollection:"Statistic_OrdersByProductAndSales"
+      groupSum:1
+      defaultQuery:
+        DelStatus:0#未删除
+        OrderStatus:3#订单状态
+      defaultQueryArray:[]
+      objectIDParameters:[
+        'OwnUser.ForeignKeyID','createUserID','OwnUser.EmployeeDepartmentID','createUserDepartmentID'
+        'OrderType.ForeignKeyID','OrderTypeID'
+        "ProductID",'ProductPlanID','ProductTypeID'
+        "ProductType","ProductType.ForeignKeyID","ProductType.ProductTypeName"
+        "StationID",'Company.ForeignKeyID',"companyID"
+        'EndAddress.ForeignKeyID','EndAddressID'
+        'opDepartmentID','opID','OPUser.ForeignKeyID','OPUser.EmployeeDepartmentID'
+      ]
+      addressParameters:['EndAddress']
+      staffParameters:[]
+      companyParameters:[]
+
+      departmentParameters:[]
+      sumValueParameters:[
+        "ElderNumber","AdultNumber","ChildNumber","BabyNumber","TotalNumber"      
+        "TotalUnPayPrice",'TotalSalesPrice','TotalFinalPrice',"TotalPayPrice","PaymentCost","GiftCost","InsureCost","GuideCost"]
+      timeParameter:
+        createTime:'CreateTime'
+        updateTime:'UpdateTime'
+        format:'Date'
+        timestructure:['Basic']
+        timezone:"Europe/London"
+      parameters:{
+        #订单属性
+        #IsElectronicSign:1#是否是电子签约
+        OrderSourceTypeID:1#订单来源
+        OrderTypeID:"$OrderType.ForeignKeyID"
+        #OrderTypeName:"$OrderType.OrderTypeName"
+        
+        #ProductID:1
+        #ProductTitle:1
+        TripTypeID:1#行程类型
+        #ProductPlanID:1
+        ProductTypeID:"$ProductType.ForeignKeyID"
+        #ProductTypeName:"$ProductType.ProductTypeName"
+        EndAddressID:"$EndAddress.ForeignKeyID"
+        #EndAddressName:"$EndAddressID.AddressName"
+        #下单人：职员属性，包含职员的ID，姓名，以及部门
+        createUserID:"$OwnUser.ForeignKeyID"
+        #createUserName:"$OwnUser.EmployeeName"
+        createUserDepartmentID:'$OwnUser.EmployeeDepartmentID'
+        #createUserDepartmentName:'$OwnUser.EmployeeDepartmentName'
+        #计调：职员属性，包含职员的
+        #opID:"$OPUser.ForeignKeyID"
+        #opName:"$OPUser.EmployeeName"
+        #opDepartmentID:"$OPUser.EmployeeDepartmentID"
+        #opDepartment:"$OPUser.EmployeeDepartmentName"
+        #公司
+        StationID:1
+        companyID:'$Company.ForeignKeyID'
+        #companyName:'$Company.CompanyName'
+        #财务
+        TotalSalesPrice:1#不包含保险、增加、减少金额的总价格
+        TotalFinalPrice:1#订单总价格   
+        TotalUnPayPrice:1#未收款
+        ElderNumber:1
+        AdultNumber:1
+        ChildNumber:1
+        BabyNumber:1
+        TotalNumber:1             
+      }
+
+      tasks:[
+        # {
+        #   name:'InitializationTask'
+        #   description:"初始化原始数据的统计"
+        #   parameters:
+        #     start:"2014/01/01 00:00:00"
+        #     end:"2015/01/01 00:00:00"
+        #     timespan:300
+        #   steps:[
+        #     {
+        #       name:"GetCreatedDataOfTimespan"
+        #       description:"获取时间间隔的新增数据"
+        #     }
+        #     {
+        #       name:"UpdateStatisticDataByDatetime"
+        #       description:"更新当前时间段的统计数据，并逐步向上更新到年的统计"
+        #     }
+        #   ]
+        # }
+        {
+          name:'AutoTaskWithTimeSpan'
+          description:"定时轮询新数据，更新新增数据的统计"
+          parameters:
+            timespan:300
+            start:"2016/10/1 9:30"
+            end:"2016/10/1 10:30"
+          steps:[
+            {
+              name:"GetUpdatedDataOfTimespan"
+              description:"获取时间间隔的新增和更新的数据"
+            }
+            {
+              name:"UpdateStatisticDataByDatetime"
+              description:'更新当前时间段的统计数据，并逐步向上更新到年的统计'
+            }
+          ]
+        }
+      ]
+    },# #来电统计(按产品属性)
+    {
+      taskID:'InitializationCallingInTask20170204'
       name:"CallingInStatisticByProductTypeOfNingBo"
       description:"呼入电话统计"
       sourceCollection:"Customer_Record"
       targetCollection:"Statistic_CallingInByProduct"
-      aggregateOutCollection:"Aggregate_Statistic_CallingInByProduct"
       groupSum:1
       defaultQuery:
         DelStatus:0#未删除
@@ -58,30 +171,11 @@ statistics:[
               name:"GetUpdatedDataOfTimespan"
               description:"获取时间间隔的新增和更新的数据"
             }
-            # {
-            #   name:"UpdateStatisticDataByDatetime"
-            #   description:'更新当前时间段的统计数据，并逐步向上更新到年的统计'
-            # }
+            {
+              name:"UpdateStatisticDataByDatetime"
+              description:'更新当前时间段的统计数据，并逐步向上更新到年的统计'
+            }
           ]
         }
       ]
-    }
-    {
-      name:"OrderSimpleStatistic"
-      description:"订单简单统计"
-      sourceCollection:"Orders"
-      targetCollection:"StatisticOrder_simple"
-    }
-    {
-      name:"CustomerStatistic"
-      description:"客户统计"
-      sourceCollection:"Orders"
-      targetCollection:"StatisticCustomer"
-    }
-    {
-      name:"ProductStatistic"
-      description:"产品统计"
-      sourceCollection:"ProductList"
-      targetCollection:"StatisticProduct"
-    }
-]
+    }]

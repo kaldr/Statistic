@@ -1,9 +1,16 @@
 import * as db from '../Collection/index.coffee'
 import _ from 'lodash'
 import Moment from 'moment'
+import {Meteor} from 'meteor/meteor'
 
 class BasicStatistic
   constructor: (@apiName, @collection, @bannedAPIList = []) ->
+    if Meteor.isServer
+      @memcached=new MemJS('localhost:11211',{EJSON:true})
+
+  getData:(selector)=>
+    data=@collection.find(selector).fetch()
+    
 
   getStatistic : (timeType, spanType, request) =>
     query=request.query
@@ -19,9 +26,17 @@ class BasicStatistic
     selector.end =
       #$lte: Moment(query.end).subtract(8, 'hour').toDate()
       $lte: Moment(new Date(query.end)).toDate()
-    data = @fetchData selector, query
-    @generateTimeWithData timeType, spanType, query, data
-
+    @selector=selector
+    memKey=EJSON.stringify selector
+    memValue=@memcached.get memKey
+    if not memValue
+      data = @fetchData selector, query
+      result=@generateTimeWithData timeType, spanType, query, data
+      @memcached.set memKey,EJSON.stringify result
+      result
+    else
+      EJSON.parse memValue
+    
   fetchData: (selector, query) =>
     @collection.find(selector).fetch()
 
@@ -36,6 +51,7 @@ class BasicStatistic
 
   generateTimeWithData: (timeType, spanType, query, data,chartType='chart.js') =>
     if chartType=='chart.js'
+
       @getChartJSData timeType, spanType, query, data
 
   getChartJSData:(timeType, spanType, query, data)=>
@@ -108,8 +124,6 @@ class BasicStatistic
 
   constructUrl: (apiName, timeType, spanType) =>
     url = "statistic/#{apiName}/#{timeType}/#{spanType}"
-    console.log url
-    url
 
 
 buildStatisticAPI = (instance) ->

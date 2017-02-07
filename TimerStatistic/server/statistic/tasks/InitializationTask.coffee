@@ -3,7 +3,6 @@ import Moment from 'moment'
 import {Task} from './Task.coffee'
 import _ from 'lodash'
 import * as db from '/imports/api/Collection/index.coffee'
-import {BuildNeccesarySpans} from './steps/buildNeccesarySpans.coffee'
 
 class InitializationTask extends Task
   constructor: (@taskOb, @logger, @statisticTask) ->
@@ -17,14 +16,23 @@ class InitializationTask extends Task
     if not startDate then startDay = Moment().year(year).month(0).date(1).hour(0).minute(0).second(0).millisecond(0) else startDay = startDate
     if not endDate then endDay = Moment().year(year + 1).month(0).date(1).hour(0).minute(0).second(0).millisecond(0) else endDay = endDate
     dates = []
-    console.log startDate
-    console.log endDate
     currentDay = startDay
+    i=0
+    # console.log '==========================================='
+    # console.log startDate,endDate 
+    # console.log '==========================================='
     while currentDay <= endDay
-      dates.push
-        start: currentDay.startOf('day').toDate()
-        end: currentDay.endOf('day').toDate()
+      workerID=parseInt process.env.CLUSTER_WORKER_ID
+      workerCount=parseInt process.env.CLUSTER_WORKERS_COUNT
+      if i%workerCount == workerID-1
+        dates.push
+          start: currentDay.startOf('day').toDate()
+          end: currentDay.endOf('day').toDate()
+      # console.log '==========================================='
+      # console.log currentDay.startOf('day').toDate(),currentDay.endOf('day').toDate()
+      # console.log '==========================================='
       currentDay.add 1, 'day'
+      i++
     dates
 
   fetchAll: () =>
@@ -36,13 +44,16 @@ class InitializationTask extends Task
     #@fetch i, count, perFetch for i in [0...@fetchTimes]
 
   getTimespansForFetchedData: (fetchedData) =>
+    #TODO: 这个方法有问题！但是没有找到
+    #FIX: 有bug
 
     spanList = []
     dt = new DateTime @taskOb.parameters.timespan
     _.map fetchedData, (data) =>
-      spanList.push dt.getMinTimeSpans data.Record_Time
+      spanList.push dt.getMinTimeSpans data[@statisticTask.timeParameter.createTime]
     spans = []
     excludeTime = []
+    util=require 'util'
 
     _.map spanList, (ob, index) =>
       if excludeTime.indexOf(index) >= 0 then return
@@ -69,7 +80,7 @@ class InitializationTask extends Task
     spans
 
   fetch: (dateObject, i, array) =>
-    console.log "%s/%s", i + 1, array.length
+
     @selector = @getDefaultQuery()
     options =
       fields: {}
@@ -79,10 +90,12 @@ class InitializationTask extends Task
       $lte: dateObject.end
     #console.log @selector
     data = @collection.find(@selector,options).fetch()
-    console.log "current day has #{data.length} pieces of data."
+    # console.log "current day has #{data.length} pieces of data."
     #console.log data
     spans = @getTimespansForFetchedData data
-    console.log "current day has #{spans.length} spans to fetch."
+    # console.log "current day has #{spans.length} spans to fetch."
+    console.log "Worker #{process.env.CLUSTER_WORKER_ID}: %s/%s #{data.length} pieces of data / #{spans.length} spans ", i + 1, array.length
+
     _.map spans, (span) =>
       @taskOb.startTime = Moment span.start
       @taskOb.endTime = Moment span.end
@@ -101,13 +114,11 @@ class InitializationTask extends Task
 
 
 
-  buildNeccesarySpans: () =>
-
   generateSpans: () =>
     start = Moment new Date @taskOb.parameters.start
     span = @taskOb.parameters.timespan
     end = Moment new Date @taskOb.parameters.end ? Moment().endOf 'day'
-
+    console.log end
     total = (end - start) / 1000
     spans = []
     spanCount = _.ceil total / span

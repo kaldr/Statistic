@@ -4,6 +4,7 @@ import {Mongo} from 'meteor/mongo'
 import {Meteor} from 'meteor/meteor'
 import util from 'util'
 
+
 class UpdateStatisticDataByDatetime extends Step
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
     super @stepOb, @logger, @taskOb, @statisticTask
@@ -16,6 +17,7 @@ class UpdateStatisticDataByDatetime extends Step
 
   insertData: (data, spans) =>
     result = []
+    if data.length==0 then return
     batch = db[@statisticTask.targetCollection].rawCollection().initializeUnorderedBulkOp() ;
     _.map spans, (spanData, spanType) =>
       _.map spanData, (sd, time) =>
@@ -25,22 +27,28 @@ class UpdateStatisticDataByDatetime extends Step
             if ['_id','id','timeID'].indexOf(key)==-1
               d[key]=value
           _.map data, (adata) =>
+            config={$inc:{}}
             _.map adata, (value, key) =>
-              if key != '_id' and key!='count' and key!='ids'
+              if key != '_id' and key!='count' 
+                if @statisticTask.sumValueParameters.indexOf(key)>=0
+                  config.$inc[key]=value
+                  return
                 if @statisticTask.objectIDParameters.indexOf(key) >= 0
-                  d[key] = value._str
+                  if typeof value =='object'
+                    d[key] = value.valueOf().toString()
+                  else 
+                    d[key] = value
                 else
                   d[key] = value
             d.taskID = @statisticTask.taskID
             count = adata.count
             #console.log util.inspect d,true,5
-            #console.log count
-            config=
-              $inc: 
-                count: count
-              # $push:
-              #   ids:adata.ids
+            #console.log count  
+            config.$inc["count"]=count 
             ob=_.clone d
+            # console.log '======================'
+            # console.log ob
+            # console.log config  
             batch.find(ob).upsert().updateOne  config, {upsert: true}
     execute = Meteor.wrapAsync(batch.execute, batch)
     execute()
@@ -59,11 +67,14 @@ class UpdateStatisticDataByDatetime extends Step
 
   update: (result) =>
     data = result.data
+    _.map data,(d)=>
+      @updateSpan d
     # _.map data, (adata) =>
     #   db[@statisticTask.targetCollection].update {timeID: adata.timeID} , {$inc: {count: diff} }
 
 
-  updateCurrentSpan: () =>
+  updateSpan: (data) =>
+
 
 
 

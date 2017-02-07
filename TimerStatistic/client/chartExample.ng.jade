@@ -1,6 +1,12 @@
 canvas.chart.chart-bar.animated.bounceIn(
+  ng-if='OrderdataReady'
+  chart-data='Orderdata' 
+  chart-labels='Orderlabels' 
+  chart-series='Orderseries')
+
+canvas.chart.chart-bar.animated.bounceIn(
   ng-if='dataReady'
-  chart-data='data' 
+  chart-data='data'
   chart-labels='labels' 
   chart-series='series' 
   chart-click='onClick')

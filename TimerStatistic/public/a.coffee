@@ -19,6 +19,7 @@
 
 # setTimeout fixed,1000
 moment=require 'moment-timezone'
+_=require 'lodash'
 
 timezone='Asia/Shanghai'
 date= new Date('2017-02-01T16:00:00.000Z')
@@ -34,4 +35,7 @@ console.log new Date()
 console.log moment(date2).get 'hour'
 
 
-
+a=[1,2,3]
+b=[34,44]
+a=_.union a,b
+console.log a

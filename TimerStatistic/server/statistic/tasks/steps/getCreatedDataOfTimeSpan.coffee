@@ -9,9 +9,9 @@ class GetCreatedDataOfTimespan extends Step
   constructor: (@stepOb, @logger, @taskOb, @statisticTask) ->
     super @stepOb, @logger, @taskOb, @statisticTask
 
-  buildInput: (input) =>
+  buildInput: (input,anti=false) =>
     @collection = Collections[@statisticTask.sourceCollection]
-    @selector = @getDefaultQuery()
+    @selector = @getDefaultQuery(anti)
     @fields = @getFields()
     @group =
       _id: @getGroupID()
@@ -21,7 +21,7 @@ class GetCreatedDataOfTimespan extends Step
       #   $push:{_id:"$_id"}
       count:
         $sum: @statisticTask.groupSum
-
+    @getSumParameters()
     @selector[@statisticTask.timeParameter.createTime] =
       $gte: input.startTime.toDate()
       $lte: input.endTime.toDate()
@@ -31,17 +31,26 @@ class GetCreatedDataOfTimespan extends Step
       {$project: @fields}
       {$group: @group}
       {$project: @getFinalFields() }
-      {$out: @statisticTask.aggregateOutCollection}
     ]
 
 
   getAggregatedData: (input) =>
     @buildInput(input)
     #console.log util.inspect @pipeline,true,5
-    @collection.aggregate @pipeline
-
-    resultCollection = Collections[@statisticTask.aggregateOutCollection]
-    result = resultCollection.find({} ).fetch()
+    #console.log @collection._name
+    #console.log @selector
+    #console.log 
+    @pipeline = [
+      {$match: @selector}
+      {$project: @fields}
+      {$group: @group}
+      {$project: @getFinalFields() }
+    ]
+    # console.log @pipeline
+    data=@collection.aggregate @pipeline
+    # console.log "===================================="
+    # console.log data
+    data
 
 
   process: (input) =>

@@ -1,0 +1,49 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/Cellar/node/6.3.0/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'run-script',
+1 verbose cli   'localhost' ]
+2 info using npm@3.10.3
+3 info using node@v6.3.0
+4 verbose run-script [ 'prelocalhost', 'localhost', 'postlocalhost' ]
+5 info lifecycle TimerStatistic@~prelocalhost: TimerStatistic@
+6 silly lifecycle TimerStatistic@~prelocalhost: no script for prelocalhost, continuing
+7 info lifecycle TimerStatistic@~localhost: TimerStatistic@
+8 verbose lifecycle TimerStatistic@~localhost: unsafe-perm in lifecycle true
+9 verbose lifecycle TimerStatistic@~localhost: PATH: /usr/local/lib/node_modules/npm/bin/node-gyp-bin:/Users/kaldr/Projects/StatisticProjects/TimerStatistic/node_modules/.bin:/usr/local/Cellar/node/6.3.0/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+10 verbose lifecycle TimerStatistic@~localhost: CWD: /Users/kaldr/Projects/StatisticProjects/TimerStatistic
+11 silly lifecycle TimerStatistic@~localhost: Args: [ '-c',
+11 silly lifecycle   'export MONGO_OPLOG_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/local?replicaSet=statisticReplica;export CLUSTER_WORKERS_COUNT=4;export MONGO_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/erp?replicaSet=statisticReplica; meteor run --no-release-check --port 3001' ]
+12 silly lifecycle TimerStatistic@~localhost: Returned: code: 254  signal: null
+13 info lifecycle TimerStatistic@~localhost: Failed to exec localhost script
+14 verbose stack Error: TimerStatistic@ localhost: `export MONGO_OPLOG_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/local?replicaSet=statisticReplica;export CLUSTER_WORKERS_COUNT=4;export MONGO_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/erp?replicaSet=statisticReplica; meteor run --no-release-check --port 3001`
+14 verbose stack Exit status 254
+14 verbose stack     at EventEmitter.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/lifecycle.js:242:16)
+14 verbose stack     at emitTwo (events.js:106:13)
+14 verbose stack     at EventEmitter.emit (events.js:191:7)
+14 verbose stack     at ChildProcess.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/spawn.js:40:14)
+14 verbose stack     at emitTwo (events.js:106:13)
+14 verbose stack     at ChildProcess.emit (events.js:191:7)
+14 verbose stack     at maybeClose (internal/child_process.js:852:16)
+14 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:215:5)
+15 verbose pkgid TimerStatistic@
+16 verbose cwd /Users/kaldr/Projects/StatisticProjects/TimerStatistic
+17 error Darwin 16.3.0
+18 error argv "/usr/local/Cellar/node/6.3.0/bin/node" "/usr/local/bin/npm" "run-script" "localhost"
+19 error node v6.3.0
+20 error npm  v3.10.3
+21 error code ELIFECYCLE
+22 error TimerStatistic@ localhost: `export MONGO_OPLOG_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/local?replicaSet=statisticReplica;export CLUSTER_WORKERS_COUNT=4;export MONGO_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/erp?replicaSet=statisticReplica; meteor run --no-release-check --port 3001`
+22 error Exit status 254
+23 error Failed at the TimerStatistic@ localhost script 'export MONGO_OPLOG_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/local?replicaSet=statisticReplica;export CLUSTER_WORKERS_COUNT=4;export MONGO_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/erp?replicaSet=statisticReplica; meteor run --no-release-check --port 3001'.
+23 error Make sure you have the latest version of node.js and npm installed.
+23 error If you do, this is most likely a problem with the TimerStatistic package,
+23 error not with npm itself.
+23 error Tell the author that this fails on your system:
+23 error     export MONGO_OPLOG_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/local?replicaSet=statisticReplica;export CLUSTER_WORKERS_COUNT=4;export MONGO_URL=mongodb://localhost:27017,localhost:28021,localhost:28022/erp?replicaSet=statisticReplica; meteor run --no-release-check --port 3001
+23 error You can get information on how to open an issue for this project with:
+23 error     npm bugs TimerStatistic
+23 error Or if that isn't available, you can get their info via:
+23 error     npm owner ls TimerStatistic
+23 error There is likely additional logging output above.
+24 verbose exit [ 1, true ]
