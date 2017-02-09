@@ -8,8 +8,8 @@ name = 'chart'
 
 class chartController
   constructor: ($scope, $reactive, $http) ->
-    $reactive this
-      .attach $scope
+    # $reactive this
+    #   .attach $scope
     $scope.onClick = (points, evt) =>console.log points, evt
     #@getData $scope, $http
     @getOrderData $scope,$http
@@ -18,16 +18,18 @@ class chartController
     if not data
       data =
         query:
-          start: '2014-1-1 00:00:00'
-          end:"2017-1-1 23:59:59"
-          #end: '2017-1-10'
-          # SDID: '000000000000000000000001'
-          # ProductAreaType_ID: 1
-          # Record_Type:1
-          # LineType_ID:2
-          #destination:'000000000000000000003602'
-        chartType:'chat.js'
-    
+          start: '2014-3-1 00:00:00'
+          end:"2015-1-1 23:59:59"
+          createUserDepartmentID:['000000000000000000000015','000000000000000000000759','000000000000000000000748']
+        #chartType:'chart.js'
+        chartType:'flat'
+        #dataType:"accumulation"
+        data:['ElderNumber','AdultNumber','ChildNumber','BabyNumber','TotalNumber']
+        separation:['createUserDepartmentID','createUserID','OrderTypeID']
+        fields:['year','month','dayOfWeek','dateOfMonth']
+        withTimespanSum:true
+        lastData:['span','year','month','day','hour']
+        
     fail = ->
     
     success = (response) =>
@@ -37,14 +39,14 @@ class chartController
         $scope.Orderlabels=[]
       
       $scope.OrderdataReady = true
-      $scope.Orderdata = [response.data.data]
-      $scope.Orderseries = ['订单']
+      $scope.Orderdata = [response.data.data.ElderNumber,response.data.data.AdultNumber,response.data.data.ChildNumber,response.data.data.BabyNumber,response.data.data.TotalNumber]
+      $scope.Orderseries = ['老人数','成人数','儿童数','婴儿数','总数']
       $scope.Orderlabels = response.data.labels
       console.log $scope.Orderlabels
       console.log $scope.Orderdata
     $http({
       method: "POST"
-      url: "/api/statistic/orders/Basic/day/"
+      url: "/api/statistic/orders/Basic/month/"
       data: data
     } ).then(success, fail)
 

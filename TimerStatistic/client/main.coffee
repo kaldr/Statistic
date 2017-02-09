@@ -1,7 +1,7 @@
 import angular from 'angular'
 import angularMeteor from 'angular-meteor'
 import {chart} from './chart.coffee'
-
+import {Meteor} from 'meteor/meteor'
 
 onReady = () =>
   angular.bootstrap document, [
@@ -15,3 +15,4 @@ angular.element document
 
 
 
+Meteor._reload.onMigrate ()->[false]
